@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#534AB7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="晚餐帮手">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<!-- End PWA Meta Tags -->
+<title>晚餐帮手 · 今天吃什么</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;background:#f5f3ee;min-height:100vh;padding:20px 16px 60px;color:#2c2c2a}
+  .app-header{text-align:center;margin-bottom:20px}
+  .app-header h1{font-size:22px;font-weight:500;color:#2c2c2a;letter-spacing:.5px}
+  .app-header p{font-size:13px;color:#888780;margin-top:4px}
+
+  /* date nav */
+  .date-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
+  .date-nav .date-label{font-size:15px;font-weight:500;color:#3C3489;min-width:120px;text-align:center}
+  .date-nav button{background:transparent;border:.5px solid #b4b2a9;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;color:#5f5e5a;transition:border-color .15s}
+  .date-nav button:hover{border-color:#534AB7;color:#534AB7}
+
+  /* controls bar */
+  .controls-bar{max-width:520px;margin:0 auto 16px;display:flex;gap:10px;align-items:stretch}
+  .ctrl-group{flex:1;background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:14px 16px}
+  .ctrl-label{font-size:11px;color:#b4b2a9;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+  .ctrl-label svg{width:13px;height:13px}
+  .diner-btns{display:flex;gap:6px}
+  .diner-btn{width:42px;height:38px;border-radius:10px;border:.5px solid rgba(0,0,0,.12);background:transparent;font-size:15px;font-weight:500;color:#5f5e5a;cursor:pointer;transition:all .15s}
+  .diner-btn.active{background:#534AB7;color:#fff;border-color:#534AB7}
+  .diner-btn:hover:not(.active){border-color:#534AB7;color:#534AB7}
+
+  .manage-btn{width:100%;background:transparent;border:.5px solid rgba(0,0,0,.12);border-radius:10px;padding:8px 0;font-size:13px;color:#5f5e5a;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+  .manage-btn:hover{border-color:#534AB7;color:#534AB7;background:#EEEDFE}
+
+  /* combo count */
+  .combo-count{text-align:center;font-size:11px;color:#b4b2a9;margin-bottom:6px}
+
+  /* card */
+  .card{background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:20px;margin-bottom:16px;max-width:520px;margin-left:auto;margin-right:auto}
+  .menu-item{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:.5px solid rgba(0,0,0,.07)}
+  .menu-item:last-child{border-bottom:none;padding-bottom:0}
+  .menu-item:first-child{padding-top:0}
+  .item-info{flex:1;min-width:0}
+  .item-name{font-size:15px;font-weight:500;color:#2c2c2a}
+  .item-desc{font-size:12px;color:#888780;margin-top:3px;line-height:1.5}
+  .item-tags{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+  .tag{font-size:11px;padding:2px 8px;border-radius:20px;border:.5px solid}
+  .tag-protein{color:#993C1D;border-color:#F0997B;background:#FAECE7}
+  .tag-veggie{color:#0F6E56;border-color:#5DCAA5;background:#E1F5EE}
+  .tag-light{color:#185FA5;border-color:#85B7EB;background:#E6F1FB}
+  .tag-staple{color:#854F0B;border-color:#EF9F27;background:#FAEEDA}
+  .tag-quick{color:#3B6D11;border-color:#97C459;background:#EAF3DE}
+  .tag-iron{color:#71243B;border-color:#F4C0D1;background:#FBEAF0}
+  .tag-custom{color:#534AB7;border-color:#AFA9EC;background:#EEEDFE}
+  .item-swap-btn{background:transparent;border:.5px solid rgba(0,0,0,.15);border-radius:8px;padding:5px 12px;font-size:12px;color:#888780;cursor:pointer;white-space:nowrap;margin-left:12px;margin-top:2px;flex-shrink:0;transition:all .15s;align-self:center}
+  .item-swap-btn:hover{border-color:#534AB7;color:#534AB7;background:#EEEDFE}
+  .refresh-btn{width:100%;background:transparent;border:.5px solid rgba(0,0,0,.15);border-radius:10px;padding:9px 0;font-size:13px;color:#5f5e5a;cursor:pointer;margin-top:8px;transition:all .15s}
+  .refresh-btn:hover{border-color:#534AB7;color:#534AB7;background:#EEEDFE}
+
+  /* nutrition */
+  .nutrition-bar{max-width:520px;margin:0 auto 16px}
+  .nut-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .nut-label{font-size:12px;color:#888780;width:55px;flex-shrink:0}
+  .nut-track{flex:1;height:6px;background:rgba(0,0,0,.07);border-radius:3px;overflow:hidden}
+  .nut-fill{height:100%;border-radius:3px;transition:width .5s ease}
+  .nut-fill-protein{background:#E24B4A}
+  .nut-fill-veggie{background:#1D9E75}
+  .nut-fill-staple{background:#BA7517}
+  .nut-value{font-size:12px;color:#5f5e5a;width:35px;text-align:right;flex-shrink:0}
+
+  /* action row */
+  .action-row{max-width:520px;margin:0 auto;display:flex;gap:10px}
+  .btn-primary{flex:1;padding:13px 0;background:#534AB7;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s}
+  .btn-primary:hover{background:#3C3489}
+  .btn-secondary{padding:13px 20px;background:transparent;color:#534AB7;border:.5px solid #534AB7;border-radius:12px;font-size:14px;cursor:pointer;transition:all .15s}
+  .btn-secondary:hover{background:#EEEDFE}
+  .saved-badge{display:none;text-align:center;font-size:12px;color:#0F6E56;margin-top:10px;padding:6px;background:#E1F5EE;border-radius:8px;max-width:520px;margin-left:auto;margin-right:auto}
+  .section-label{max-width:520px;margin:0 auto 10px;font-size:12px;color:#b4b2a9;letter-spacing:.5px;padding:0 2px}
+
+  /* history */
+  .history-card{max-width:520px;margin:0 auto 16px;background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px}
+  .history-title{font-size:13px;color:#888780;margin-bottom:12px}
+  .history-list{list-style:none}
+  .history-list li{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:.5px solid rgba(0,0,0,.06);font-size:13px}
+  .history-list li:last-child{border-bottom:none}
+  .h-date{color:#888780;flex-shrink:0}
+  .h-menu{color:#2c2c2a;text-align:right;max-width:70%;font-size:12px}
+  .h-diners{font-size:11px;color:#b4b2a9;margin-left:4px}
+
+  /* manage panel */
+  .manage-panel{max-width:520px;margin:0 auto 16px;background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px;display:none}
+  .manage-panel.open{display:block}
+  .mp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .mp-title{font-size:15px;font-weight:500}
+  .mp-close{background:transparent;border:none;font-size:18px;color:#888780;cursor:pointer;padding:4px 8px;border-radius:6px}
+  .mp-close:hover{background:rgba(0,0,0,.06)}
+  .mp-tabs{display:flex;gap:0;border-bottom:1px solid rgba(0,0,0,.1);margin-bottom:16px}
+  .mp-tab{flex:1;text-align:center;padding:8px 0;font-size:13px;color:#888780;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+  .mp-tab.active{color:#534AB7;border-bottom-color:#534AB7}
+  .mp-dish-list{max-height:320px;overflow-y:auto;margin-bottom:14px}
+  .mp-dish{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:.5px solid rgba(0,0,0,.05)}
+  .mp-dish:last-child{border-bottom:none}
+  .mp-dish-info{flex:1;min-width:0}
+  .mp-dish-name{font-size:13px;font-weight:500}
+  .mp-dish-name.hidden-dish{color:#b4b2a9;text-decoration:line-through}
+  .mp-dish-desc{font-size:11px;color:#888780;margin-top:2px}
+  .mp-dish-name .custom-badge{font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;font-weight:400}
+  .mp-toggle{width:38px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .2s;margin-right:10px;flex-shrink:0}
+  .mp-toggle.on{background:#534AB7}
+  .mp-toggle.off{background:#d3d1c7}
+  .mp-toggle::after{content:'';position:absolute;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+  .mp-toggle.on::after{left:18px}
+  .mp-toggle.off::after{left:2px}
+  .mp-del-btn{background:transparent;border:none;color:#E24B4A;font-size:12px;cursor:pointer;padding:4px 6px;border-radius:4px;flex-shrink:0}
+  .mp-del-btn:hover{background:#FCEBEB}
+  .mp-add-form{border-top:1px solid rgba(0,0,0,.08);padding-top:14px}
+  .mp-add-title{font-size:13px;font-weight:500;margin-bottom:10px;color:#2c2c2a}
+  .mp-field{margin-bottom:10px}
+  .mp-field label{font-size:12px;color:#888780;display:block;margin-bottom:4px}
+  .mp-field input,.mp-field select{width:100%;padding:8px 10px;border:.5px solid rgba(0,0,0,.15);border-radius:8px;font-size:13px;color:#2c2c2a;background:#fff}
+  .mp-field input:focus,.mp-field select:focus{outline:none;border-color:#534AB7}
+  .mp-tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .mp-tag-opt{font-size:11px;padding:4px 10px;border-radius:14px;border:.5px solid rgba(0,0,0,.12);background:transparent;cursor:pointer;color:#5f5e5a;transition:all .15s}
+  .mp-tag-opt.sel{background:#534AB7;color:#fff;border-color:#534AB7}
+  .mp-submit{width:100%;padding:10px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;margin-top:6px;transition:background .15s}
+  .mp-submit:hover{background:#3C3489}
+
+  .shake{animation:shake .4s ease}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .fade-in{animation:fadeIn .35s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  
+  /* PWA install prompt */
+  .install-prompt{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,0,.1);padding:12px 16px;z-index:1000;box-shadow:0 -2px 10px rgba(0,0,0,.1)}
+  .install-prompt.show{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .install-prompt p{font-size:13px;color:#2c2c2a;flex:1}
+  .install-btn{background:#534AB7;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+  .install-dismiss{background:transparent;color:#888780;border:none;font-size:18px;cursor:pointer;padding:4px}
+</style>
+</head>
+<body>
+
+<!-- PWA Install Prompt -->
+<div class="install-prompt" id="installPrompt">
+  <p>📱 安装到桌面，像APP一样使用</p>
+  <button class="install-btn" id="installBtn">安装</button>
+  <button class="install-dismiss" id="dismissBtn">✕</button>
+</div>
+
+<div class="app-header">
+  <h1>今天吃什么</h1>
+  <p>智能搭配 · 营养均衡 · 常换常新</p>
+</div>
+
+<div class="date-nav">
+  <button onclick="changeDate(-1)">‹ 前一天</button>
+  <div class="date-label" id="dateLabel"></div>
+  <button onclick="changeDate(1)">后一天 ›</button>
+</div>
+
+<div class="controls-bar">
+  <div class="ctrl-group">
+    <div class="ctrl-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      就餐人数
+    </div>
+    <div class="diner-btns" id="dinerBtns">
+      <button class="diner-btn" data-n="1" onclick="setDiners(1)">1</button>
+      <button class="diner-btn active" data-n="2" onclick="setDiners(2)">2</button>
+      <button class="diner-btn" data-n="3" onclick="setDiners(3)">3</button>
+      <button class="diner-btn" data-n="4" onclick="setDiners(4)">4</button>
+    </div>
+  </div>
+  <div class="ctrl-group" style="flex:0 0 120px;display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="ctrl-label">菜品管理</div>
+    <button class="manage-btn" onclick="toggleManage()">编辑菜品库</button>
+  </div>
+</div>
+
+<div class="combo-count" id="comboCount"></div>
+<p class="section-label">今日菜单</p>
+<div class="card fade-in" id="menuCard">
+  <div id="menuContent"></div>
+  <button class="refresh-btn" onclick="rerollAll()">全部换一套</button>
+</div>
+
+<p class="section-label">营养评估</p>
+<div class="nutrition-bar" id="nutritionBar"></div>
+
+<div class="action-row">
+  <button class="btn-primary" onclick="saveMenu()">确定今天就吃这个</button>
+  <button class="btn-secondary" onclick="showHistory()">历史记录</button>
+</div>
+<div class="saved-badge" id="savedBadge"></div>
+
+<div id="historySection" style="display:none;margin-top:20px;">
+  <p class="section-label">最近的晚餐</p>
+  <div class="history-card">
+    <div class="history-title">近 7 天记录</div>
+    <ul class="history-list" id="historyList"></ul>
+  </div>
+</div>
+
+<!-- manage panel -->
+<div class="manage-panel" id="managePanel">
+  <div class="mp-header">
+    <span class="mp-title">菜品库管理</span>
+    <button class="mp-close" onclick="toggleManage()">✕</button>
+  </div>
+  <div class="mp-tabs" id="mpTabs">
+    <div class="mp-tab active" data-cat="main" onclick="switchTab('main')">主菜</div>
+    <div class="mp-tab" data-cat="side" onclick="switchTab('side')">配菜</div>
+    <div class="mp-tab" data-cat="soup" onclick="switchTab('soup')">汤</div>
+    <div class="mp-tab" data-cat="grain" onclick="switchTab('grain')">主食</div>
+  </div>
+  <div class="mp-dish-list" id="mpDishList"></div>
+  <div class="mp-add-form" id="mpAddForm">
+    <div class="mp-add-title">添加自定义菜品</div>
+    <div class="mp-field"><label>菜品名称</label><input id="addName" placeholder="如：外婆红烧肉"></div>
+    <div class="mp-field"><label>简介</label><input id="addDesc" placeholder="如：奶奶的秘方，肥而不腻"></div>
+    <div id="addExtraFields"></div>
+    <label style="font-size:12px;color:#888780;display:block;margin-bottom:6px;">特点标签</label>
+    <div class="mp-tags-row" id="addTags"></div>
+    <button class="mp-submit" onclick="addCustomDish()">添加到菜品库</button>
+  </div>
+</div>
+
+<script>
+// ========================================
+// PWA Service Worker Registration
+// ========================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => console.log('Service Worker registered:', reg.scope))
+      .catch(err => console.log('Service Worker registration failed:', err));
+  });
+}
+
+// PWA Install Prompt
+let deferredPrompt;
+const installPrompt = document.getElementById('installPrompt');
+const installBtn = document.getElementById('installBtn');
+const dismissBtn = document.getElementById('dismissBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+  // Show the install prompt
+  installPrompt.classList.add('show');
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  // Show the install prompt
+  deferredPrompt.prompt();
+  // Wait for the user to respond to the prompt
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log(`User response to the install prompt: ${outcome}`);
+  // Clear the deferredPrompt
+  deferredPrompt = null;
+  // Hide the install prompt
+  installPrompt.classList.remove('show');
+});
+
+dismissBtn.addEventListener('click', () => {
+  installPrompt.classList.remove('show');
+  // Optionally remember user dismissed
+  localStorage.setItem('installDismissed', 'true');
+});
+
+// Check if user previously dismissed
+if (localStorage.getItem('installDismissed') === 'true') {
+  installPrompt.classList.remove('show');
+}
+
+// Listen for app installed
+window.addEventListener('appinstalled', (evt) => {
+  console.log('App was installed');
+  installPrompt.classList.remove('show');
+});
+
+// ========================================
+// DEFAULT DISH DATABASES
+// ========================================
+const DEFAULT_MAINS = [
+  {name:"红烧鸡腿",desc:"鸡腿肉质嫩，蛋白质高，孩子最爱",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
+  {name:"宫保鸡丁",desc:"花生鸡丁，微辣鲜香，下饭神器",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"微辣",color:"red"},
+  {name:"可乐鸡翅",desc:"香甜入味，孩子最爱，简单易做",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"甜",color:"brown"},
+  {name:"葱油鸡",desc:"白切鸡变体，葱油香气浓郁，低油少盐",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"yellow"},
+  {name:"咖喱鸡块",desc:"浓郁咖喱，土豆胡萝卜同炖，香甜下饭",tags:["protein","veggie"],proteinSrc:"chicken",heavy:true,flavor:"浓郁",color:"yellow"},
+  {name:"香菇蒸鸡",desc:"蒸制保留营养，香菇提鲜，低油健康",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
+  {name:"口水鸡",desc:"川式凉拌鸡，麻辣鲜香，开胃下饭",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"辣",color:"red"},
+  {name:"糖醋里脊",desc:"外酥里嫩，酸甜口味促食欲",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"酸甜",color:"red"},
+  {name:"鱼香肉丝",desc:"四川家常菜，鲜辣咸甜，开胃下饭",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"微辣",color:"red"},
+  {name:"青椒炒肉片",desc:"维C+蛋白质双丰收，快手家常菜",tags:["protein","veggie"],proteinSrc:"pork",heavy:false,flavor:"咸鲜",color:"green"},
+  {name:"土豆炖牛肉",desc:"暖胃补铁，胶原蛋白丰富",tags:["protein"],proteinSrc:"beef",heavy:true,flavor:"咸鲜",color:"brown"},
+  {name:"西红柿牛腩",desc:"酸甜软烂，铁质丰富，老少皆宜",tags:["protein","veggie"],proteinSrc:"beef",heavy:true,flavor:"酸甜",color:"red"},
+  {name:"蒜泥白肉",desc:"瘦猪肉+蒜香酱，低脂高蛋白",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"蒜香",color:"white"},
+  {name:"红烧肉",desc:"肥而不腻，入口即化，经典硬菜",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"咸甜",color:"brown"},
+  {name:"回锅肉",desc:"川菜之魂，蒜苗配五花，香辣下饭",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"微辣",color:"green"},
+  {name:"清蒸鲈鱼",desc:"优质蛋白，DHA丰富，益智健脑",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"清淡",color:"white"},
+  {name:"照烧三文鱼",desc:"Omega-3丰富，益脑益视，微甜鲜香",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"甜",color:"orange"},
+  {name:"韭黄炒虾仁",desc:"高蛋白低脂，锌元素丰富",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"yellow"},
+  {name:"剁椒蒸鱼头",desc:"湘式风味，胶原蛋白充足，鲜辣可口",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"辣",color:"red"},
+  {name:"糖醋鱼块",desc:"酸甜酥脆，鱼肉鲜嫩不腥",tags:["protein"],proteinSrc:"fish",heavy:true,flavor:"酸甜",color:"red"},
+  {name:"虾仁滑蛋",desc:"嫩滑鸡蛋+弹牙虾仁，双重高蛋白",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"yellow"},
+  {name:"麻婆豆腐",desc:"麻辣鲜香，植物蛋白高",tags:["protein"],proteinSrc:"tofu",heavy:false,flavor:"辣",color:"red"},
+  {name:"干锅花菜",desc:"香辣入味，膳食纤维高，热量低",tags:["veggie"],proteinSrc:"tofu",heavy:false,flavor:"微辣",color:"green"},
+  {name:"蛋黄焗南瓜",desc:"软糯香甜，胡萝卜素丰富",tags:["veggie","staple"],proteinSrc:"egg",heavy:false,flavor:"甜",color:"yellow"},
+  {name:"香煎豆腐",desc:"外酥里嫩，植物蛋白高，钙质充足",tags:["protein"],proteinSrc:"tofu",heavy:false,flavor:"咸鲜",color:"yellow"},
+  {name:"番茄炒蛋",desc:"家常经典，酸甜开胃，维生素C丰富",tags:["protein","veggie"],proteinSrc:"egg",heavy:false,flavor:"酸甜",color:"red"},
+  {name:"蒸蛋羹",desc:"嫩滑易消化，高蛋白低脂肪",tags:["protein"],proteinSrc:"egg",heavy:false,flavor:"清淡",color:"yellow"},
+  {name:"地三鲜",desc:"土豆茄子青椒，东北经典素菜",tags:["veggie"],proteinSrc:"tofu",heavy:false,flavor:"咸鲜",color:"green"},
+  {name:"蒜蓉粉丝蒸虾",desc:"蒜香浓郁，粉丝吸汁鲜美",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"蒜香",color:"white"},
+  {name:"锅包肉",desc:"外酥里嫩，酸甜口味，东北名菜",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"酸甜",color:"orange"},
+  {name:"可乐排骨",desc:"香甜入味，骨肉分离，孩子最爱",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"甜",color:"brown"},
+];
+
+const DEFAULT_SIDES = [
+  {name:"清炒西兰花",desc:"蒜香十足，膳食纤维高",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"炒菠菜",desc:"铁元素丰富，焯水去草酸",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"炒油麦菜",desc:"清淡爽口，叶酸含量高",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"清炒荷兰豆",desc:"鲜甜脆嫩，维生素C高",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"炒空心菜",desc:"铁+维C，夏季常见时蔬",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"炒豌豆苗",desc:"鲜嫩清甜，叶绿素高",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"手撕卷心菜",desc:"爽脆可口，维C丰富",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"炒白菜",desc:"维C高，促进消化，价格实惠",tags:["veggie","quick"],vegType:"green",color:"white"},
+  {name:"清炒芦笋",desc:"高膳食纤维，抗氧化",tags:["veggie"],vegType:"green",color:"green"},
+  {name:"清炒蒜苔",desc:"杀菌护肝，应季蔬菜",tags:["veggie"],vegType:"green",color:"green"},
+  {name:"拍黄瓜",desc:"清爽解腻，无需加热",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"凉拌黄瓜",desc:"脆嫩清爽，解腻首选",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"凉拌木耳",desc:"膳食纤维高，清脆爽口",tags:["veggie","quick"],vegType:"black",color:"black"},
+  {name:"素炒豆芽",desc:"脆嫩爽口，维生素B丰富",tags:["veggie","quick"],vegType:"yellow",color:"yellow"},
+  {name:"蒸南瓜",desc:"胡萝卜素丰富，甜糯软烂",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
+  {name:"炒胡萝卜丝",desc:"胡萝卜素加倍，炒熟更好吸收",tags:["veggie"],vegType:"orange",color:"orange"},
+  {name:"炒杏鲍菇",desc:"Q弹鲜嫩，氨基酸丰富",tags:["veggie"],vegType:"white",color:"white"},
+  {name:"蒜泥蒸茄子",desc:"蒜香浓郁，花青素丰富",tags:["veggie","quick"],vegType:"purple",color:"purple"},
+  {name:"炒莴笋片",desc:"低热量，钾元素丰富",tags:["veggie"],vegType:"green",color:"green"},
+  {name:"凉拌海带丝",desc:"碘元素丰富，膳食纤维高",tags:["veggie","quick"],vegType:"black",color:"black"},
+  {name:"虎皮青椒",desc:"微辣下饭，维C丰富",tags:["veggie"],vegType:"green",color:"green"},
+  {name:"拌三丝",desc:"胡萝卜/黄瓜/豆腐干，营养多样",tags:["veggie","protein"],vegType:"mixed",color:"mixed"},
+  {name:"炒土豆丝",desc:"酸辣爽脆，百吃不厌",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
+  {name:"炒藕片",desc:"脆嫩清甜，秋季应季菜",tags:["veggie"],vegType:"white",color:"white"},
+  {name:"凉拌西蓝花",desc:"焯水凉拌，保留维C，清爽开胃",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"蒜蓉炒青菜",desc:"百搭青菜，简单快手",tags:["veggie","quick"],vegType:"green",color:"green"},
+  {name:"香干炒芹菜",desc:"植物蛋白+膳食纤维，口感爽脆",tags:["veggie","protein"],vegType:"green",color:"green"},
+];
+
+const DEFAULT_SOUPS = [
+  {name:"紫菜蛋花汤",desc:"碘元素丰富，低热量",tags:["light"],heavy:false,flavor:"清淡"},
+  {name:"番茄蛋花汤",desc:"酸甜可口，维生素C加倍",tags:["light"],heavy:false,flavor:"酸甜"},
+  {name:"蛋花汤",desc:"简单快手，补充蛋白质",tags:["light","protein"],heavy:false,flavor:"清淡"},
+  {name:"豆腐味噌汤",desc:"日式清汤，植物蛋白高",tags:["light","protein"],heavy:false,flavor:"咸鲜"},
+  {name:"紫菜虾皮汤",desc:"碘+钙双补，鲜美快手",tags:["light"],heavy:false,flavor:"清淡"},
+  {name:"冬瓜虾皮汤",desc:"低热量，补钙清淡",tags:["light"],heavy:false,flavor:"清淡"},
+  {name:"菠菜豆腐汤",desc:"铁+钙组合，营养均衡",tags:["light","protein"],heavy:false,flavor:"清淡"},
+  {name:"海带豆腐汤",desc:"补碘+钙，清淡鲜美",tags:["light"],heavy:false,flavor:"清淡"},
+  {name:"银耳枸杞汤",desc:"润肺养颜，甜而不腻",tags:["light"],heavy:false,flavor:"甜"},
+  {name:"绿豆汤",desc:"清热解暑，夏季必备",tags:["light"],heavy:false,flavor:"甜"},
+  {name:"酸辣汤",desc:"开胃助消化，醒神暖胃",tags:["light"],heavy:false,flavor:"微辣"},
+  {name:"鸡蛋菠菜汤",desc:"营养均衡，快手补铁",tags:["light","protein"],heavy:false,flavor:"清淡"},
+  {name:"丝瓜蛋汤",desc:"夏季清凉，甘甜可口",tags:["light"],heavy:false,flavor:"清淡"},
+  {name:"冬瓜排骨汤",desc:"清淡去火，低脂高汤",tags:["protein"],heavy:true,flavor:"清淡"},
+  {name:"玉米排骨汤",desc:"甘甜可口，钙质充足",tags:["protein"],heavy:true,flavor:"甜"},
+  {name:"萝卜排骨汤",desc:"消食助消化，清甜可口",tags:["protein"],heavy:true,flavor:"甜"},
+  {name:"猪骨莲藕汤",desc:"通气健脾，钙质充足",tags:["protein"],heavy:true,flavor:"清淡"},
+  {name:"山药薏仁粥",desc:"健脾养胃，清淡滋补",tags:["light","staple"],heavy:false,flavor:"清淡"},
+  {name:"蛤蜊冬瓜汤",desc:"鲜美补锌，低热量消暑",tags:["light","protein"],heavy:false,flavor:"鲜"},
+  {name:"冬瓜薏米汤",desc:"健脾祛湿，适合夏季",tags:["light"],heavy:false,flavor:"清淡"},
+  {name:"鸡架熬汤",desc:"鲜美低脂，骨胶原丰富",tags:["light","protein"],heavy:false,flavor:"鲜"},
+  {name:"番茄牛腩汤",desc:"酸甜浓郁，高蛋白暖汤",tags:["protein"],heavy:true,flavor:"酸甜"},
+];
+
+const DEFAULT_GRAINS = [
+  {name:"米饭",desc:"白米饭，经典主食",tags:["staple"],grain:"rice"},
+  {name:"杂粮饭",desc:"糙米+小米+黑米，营养翻倍",tags:["staple"],grain:"mixed"},
+  {name:"小米粥",desc:"养胃安神，易消化",tags:["staple","light"],grain:"millet"},
+  {name:"面条",desc:"番茄鸡蛋面，简单一锅出",tags:["staple"],grain:"noodle"},
+  {name:"玉米",desc:"煮甜玉米，膳食纤维高",tags:["staple","veggie"],grain:"corn"},
+  {name:"红薯饭",desc:"白米饭+红薯块，香甜软糯",tags:["staple"],grain:"mixed"},
+  {name:"紫薯饭",desc:"花青素丰富，颜色好看孩子爱吃",tags:["staple"],grain:"mixed"},
+  {name:"馒头",desc:"北方主食，松软可口",tags:["staple"],grain:"wheat"},
+];
+
+// ========================================
+// STATE
+// ========================================
+let currentDate = new Date(); currentDate.setHours(0,0,0,0);
+let dinerCount = parseInt(localStorage.getItem("dinnerDiners") || "2");
+let currentMenu = { mains:[], sides:[], soups:[], grain:null };
+let savedMenus = JSON.parse(localStorage.getItem("dinnerHistory_v2") || "{}");
+let hiddenDishes = JSON.parse(localStorage.getItem("dinnerHidden") || '{"mains":[],"sides":[],"soups":[],"grains":[]}');
+let customDishes = JSON.parse(localStorage.getItem("dinnerCustom") || '{"mains":[],"sides":[],"soups":[],"grains":[]}');
+let manageTab = "main";
+let addFormTags = [];
+
+const TAG_MAP = {
+  protein:{label:"高蛋白",cls:"tag-protein"},veggie:{label:"蔬菜",cls:"tag-veggie"},
+  light:{label:"清淡",cls:"tag-light"},staple:{label:"主食",cls:"tag-staple"},
+  quick:{label:"快手",cls:"tag-quick"},iron:{label:"补铁",cls:"tag-iron"},
+  custom:{label:"自定义",cls:"tag-custom"}
+};
+
+// ========================================
+// GET ACTIVE DISHES (default - hidden + custom)
+// ========================================
+function getActiveDishes(cat) {
+  const defaults = {main:DEFAULT_MAINS,side:DEFAULT_SIDES,soup:DEFAULT_SOUPS,grain:DEFAULT_GRAINS};
+  const key = cat === "side" ? "sides" : cat === "soup" ? "soups" : cat === "grain" ? "grains" : "mains";
+  const hidden = hiddenDishes[key] || [];
+  const customs = (customDishes[key] || []).map(d => ({...d, _custom:true}));
+  return [...defaults[cat].filter(d => !hidden.includes(d.name)), ...customs];
+}
+
+function getAllDishes(cat) {
+  const defaults = {main:DEFAULT_MAINS,side:DEFAULT_SIDES,soup:DEFAULT_SOUPS,grain:DEFAULT_GRAINS};
+  const key = cat === "side" ? "sides" : cat === "soup" ? "soups" : cat === "grain" ? "grains" : "mains";
+  const hidden = hiddenDishes[key] || [];
+  const customs = (customDishes[key] || []).map(d => ({...d, _custom:true}));
+  return [...defaults[cat].map(d => ({...d, _hidden:hidden.includes(d.name)})), ...customs];
+}
+
+function isActive(cat, name) {
+  return getActiveDishes(cat).some(d => d.name === name);
+}
+
+// ========================================
+// DATE HELPERS
+// ========================================
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function dateDisplay(d) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((d - today) / 86400000);
+  const wd = ["周日","周一","周二","周三","周四","周五","周六"][d.getDay()];
+  const label = `${d.getMonth()+1}月${d.getDate()}日 ${wd}`;
+  if (diff === 0) return label + "（今天）";
+  if (diff === 1) return label + "（明天）";
+  if (diff === -1) return label + "（昨天）";
+  return label;
+}
+
+// ========================================
+// MENU GENERATION ENGINE
+// ========================================
+function getRecentDishes(days) {
+  const used = {main:[],side:[],soup:[],grain:[]};
+  for (let i = 1; i <= days; i++) {
+    const d = new Date(currentDate); d.setDate(d.getDate() - i);
+    const k = dateKey(d);
+    if (savedMenus[k]) {
+      const m = savedMenus[k];
+      m.mains.forEach(n => used.main.push(n));
+      m.sides.forEach(n => used.side.push(n));
+      used.soup.push(m.soup);
+      used.grain.push(m.grain);
+    }
+  }
+  return used;
+}
+
+function getRecentProteinSrc(days) {
+  const srcs = [];
+  for (let i = 1; i <= days; i++) {
+    const d = new Date(currentDate); d.setDate(d.getDate() - i);
+    const k = dateKey(d);
+    if (savedMenus[k]) {
+      savedMenus[k].mains.forEach(name => {
+        const dish = DEFAULT_MAINS.find(m => m.name === name) || (customDishes.mains||[]).find(m=>m.name===name);
+        if (dish && dish.proteinSrc) srcs.push(dish.proteinSrc);
+      });
+    }
+  }
+  return srcs;
+}
+
+function pickFrom(arr, excludeNames, extraFilter) {
+  let c = arr.filter(i => !excludeNames.includes(i.name));
+  if (extraFilter) c = c.filter(extraFilter);
+  if (c.length === 0) c = arr;
+  return c[Math.floor(Math.random() * c.length)];
+}
+
+function generateFullMenu(exclude) {
+  exclude = exclude || {};
+  const allMains = getActiveDishes("main");
+  const allSides = getActiveDishes("side");
+  const allSoups = getActiveDishes("soup");
+  const allGrains = getActiveDishes("grain");
+  const recent = getRecentDishes(5);
+  const recentProteinSrc = getRecentProteinSrc(3);
+
+  // === MAIN DISH(ES) ===
+  let mains = [];
+  let mainCandidates = allMains.filter(m => !recent.main.includes(m.name));
+  if (exclude.mains) mainCandidates = mainCandidates.filter(m => !exclude.mains.includes(m.name));
+  let proteinFiltered = mainCandidates.filter(m => !recentProteinSrc.includes(m.proteinSrc));
+  const mainPool = proteinFiltered.length > 0 ? proteinFiltered : mainCandidates;
+
+  // For 1 person, prefer lighter mains
+  if (dinerCount === 1) {
+    let lightMains = mainPool.filter(m => !m.heavy);
+    if (lightMains.length > 0) mains.push(lightMains[Math.floor(Math.random()*lightMains.length)]);
+    else mains.push(mainPool[Math.floor(Math.random()*mainPool.length)]);
+  } else {
+    mains.push(mainPool[Math.floor(Math.random()*mainPool.length)]);
+  }
+
+  // === SIDE DISH(ES) ===
+  let sideCount = dinerCount <= 2 ? 1 : 2;
+  let sides = [];
+  let sideRecent = recent.side.slice(0, 3);
+  let usedSideNames = [...exclude.sides || []];
+
+  for (let i = 0; i < sideCount; i++) {
+    let sideCandidates = allSides.filter(s => !sideRecent.includes(s.name) && !usedSideNames.includes(s.name));
+    const mainHasGreen = mains.some(m => m.tags.includes("veggie") && m.color === "green");
+    if (mainHasGreen && i === 0) {
+      let nonGreen = sideCandidates.filter(s => s.color !== "green");
+      if (nonGreen.length > 0) sideCandidates = nonGreen;
+    } else if (!mainHasGreen && i === 0) {
+      let greenOnes = sideCandidates.filter(s => s.color === "green");
+      if (greenOnes.length > 0 && Math.random() > 0.3) sideCandidates = greenOnes;
+    }
+    if (mains.some(m => m.heavy) && i === 0) {
+      let lightSides = sideCandidates.filter(s => s.tags.includes("quick"));
+      if (lightSides.length > 0) sideCandidates = lightSides;
+    }
+    // For 2nd side, ensure color diversity
+    if (i === 1 && sides.length > 0) {
+      let prevColor = sides[0].color;
+      let diffColor = sideCandidates.filter(s => s.color !== prevColor);
+      if (diffColor.length > 0) sideCandidates = diffColor;
+    }
+    if (sideCandidates.length === 0) sideCandidates = allSides.filter(s => !usedSideNames.includes(s.name));
+    const picked = sideCandidates[Math.floor(Math.random()*sideCandidates.length)];
+    if (picked) { sides.push(picked); usedSideNames.push(picked.name); }
+  }
+
+  // === SOUP ===
+  let soupCandidates = allSoups.filter(s => !recent.soup.slice(0,3).includes(s.name));
+  if (exclude.soup) soupCandidates = soupCandidates.filter(s => s.name !== exclude.soup);
+  if (mains.some(m => m.heavy)) {
+    let lightSoups = soupCandidates.filter(s => s.tags.includes("light"));
+    if (lightSoups.length > 0) soupCandidates = lightSoups;
+  }
+  if (mains.some(m => m.flavor==="辣"||m.flavor==="微辣")) {
+    let nonSpicy = soupCandidates.filter(s => s.flavor!=="辣" && s.flavor!=="微辣");
+    if (nonSpicy.length > 0) soupCandidates = nonSpicy;
+  }
+  if (soupCandidates.length === 0) soupCandidates = allSoups;
+  const soup = soupCandidates[Math.floor(Math.random()*soupCandidates.length)];
+
+  // === GRAIN ===
+  let grainCandidates = allGrains.filter(g => !recent.grain.slice(0,3).includes(g.name));
+  if (exclude.grain) grainCandidates = grainCandidates.filter(g => g.name !== exclude.grain);
+  if (mains.some(m => m.flavor==="清淡") && Math.random()>0.5) {
+    let mixed = grainCandidates.filter(g => g.grain==="mixed");
+    if (mixed.length > 0) grainCandidates = mixed;
+  }
+  if (grainCandidates.length === 0) grainCandidates = allGrains;
+  const grain = grainCandidates[Math.floor(Math.random()*grainCandidates.length)];
+
+  return { mains, sides, soup, grain };
+}
+
+function calcNutrition(menu) {
+  let p = 0, v = 0, s = 0;
+  menu.mains.forEach(m => {
+    if (m.tags.includes("protein")) p += dinerCount <= 1 ? 40 : 45;
+    if (m.proteinSrc && ["beef","pork","fish"].includes(m.proteinSrc)) p += 15;
+    else if (m.proteinSrc==="chicken") p += 10;
+    else if (m.proteinSrc==="seafood") p += 12;
+    else if (m.proteinSrc==="tofu") p += 8;
+    else if (m.proteinSrc==="egg") p += 6;
+    if (m.proteinSrc) p += 5;
+  });
+  if (menu.soup.tags.includes("protein")) p += 8;
+  p = Math.min(100, p);
+
+  menu.mains.forEach(m => { if (m.tags.includes("veggie")) v += 12; });
+  v += menu.sides.length * 25;
+  menu.sides.forEach(si => { if (si.tags.includes("quick")) v += 8; });
+  v += 12;
+  if (menu.grain.tags.includes("veggie")) v += 8;
+  v = Math.min(100, v);
+
+  s = menu.grain.tags.includes("mixed")||menu.grain.grain==="mixed" ? 72 : 68;
+  if (menu.mains.some(m => m.tags.includes("staple"))) s += 8;
+  s = Math.min(100, s);
+
+  return { protein:Math.round(p), veggie:Math.round(v), staple:Math.round(s) };
+}
+
+function totalCombos() {
+  const m = getActiveDishes("main").length;
+  const s = getActiveDishes("side").length;
+  const sp = getActiveDishes("soup").length;
+  const g = getActiveDishes("grain").length;
+  let sidesCount = dinerCount <= 2 ? s : s * Math.max(1, s-1);
+  return m * sidesCount * sp * g;
+}
+
+// ========================================
+// RENDER
+// ========================================
+function renderTags(tags) {
+  return tags.map(t => {
+    const info = TAG_MAP[t]; if (!info) return '';
+    return `<span class="tag ${info.cls}">${info.label}</span>`;
+  }).join('');
+}
+
+function renderMenu(menu) {
+  let items = [];
+
+  menu.mains.forEach((dish, i) => {
+    const role = menu.mains.length > 1 ? (i===0?"主菜":"副菜") : "主菜";
+    const icon = i===0?"🍖":"🍗";
+    items.push(`<div class="menu-item">
+      <div class="item-info">
+        <div class="item-name">${icon} ${dish.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">${role}</span>${dish._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
+        <div class="item-desc">${dish.desc}</div>
+        <div class="item-tags">${renderTags(dish.tags)}</div>
+      </div>
+      <button class="item-swap-btn" onclick="swapOne('main',${i})">换主菜</button>
+    </div>`);
+  });
+
+  menu.sides.forEach((dish, i) => {
+    const role = menu.sides.length > 1 ? (i===0?"配菜一":"配菜二") : "配菜";
+    const icon = i===0?"🥬":"🥦";
+    items.push(`<div class="menu-item">
+      <div class="item-info">
+        <div class="item-name">${icon} ${dish.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">${role}</span>${dish._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
+        <div class="item-desc">${dish.desc}</div>
+        <div class="item-tags">${renderTags(dish.tags)}</div>
+      </div>
+      <button class="item-swap-btn" onclick="swapOne('side',${i})">换配菜</button>
+    </div>`);
+  });
+
+  items.push(`<div class="menu-item">
+    <div class="item-info">
+      <div class="item-name">🍲 ${menu.soup.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">汤</span>${menu.soup._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
+      <div class="item-desc">${menu.soup.desc}</div>
+      <div class="item-tags">${renderTags(menu.soup.tags)}</div>
+    </div>
+    <button class="item-swap-btn" onclick="swapOne('soup',0)">换汤</button>
+  </div>`);
+
+  items.push(`<div class="menu-item">
+    <div class="item-info">
+      <div class="item-name">🍚 ${menu.grain.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">主食</span>${menu.grain._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
+      <div class="item-desc">${menu.grain.desc}</div>
+      <div class="item-tags">${renderTags(menu.grain.tags)}</div>
+    </div>
+    <button class="item-swap-btn" onclick="swapOne('grain',0)">换主食</button>
+  </div>`);
+
+  return items.join('');
+}
+
+function renderNutrition(nut) {
+  const bars = [
+    {label:"蛋白质",value:nut.protein,fill:"nut-fill-protein"},
+    {label:"蔬菜",value:nut.veggie,fill:"nut-fill-veggie"},
+    {label:"主食",value:nut.staple,fill:"nut-fill-staple"}
+  ];
+  const score = Math.round((nut.protein+nut.veggie+nut.staple)/3);
+  let scoreColor = score>=68?"#0F6E56":score>=55?"#BA7517":"#E24B4A";
+  let scoreText = score>=68?"营养均衡":score>=55?"基本达标":"建议加蔬菜";
+  return `<div style="background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-size:13px;color:#888780;">营养评估</span>
+      <span style="font-size:13px;font-weight:500;color:${scoreColor};">${scoreText}</span>
+    </div>
+    ${bars.map(b=>`<div class="nut-row"><span class="nut-label">${b.label}</span><div class="nut-track"><div class="nut-fill ${b.fill}" style="width:${b.value}%"></div></div><span class="nut-value">${b.value}%</span></div>`).join('')}
+  </div>`;
+}
+
+function updateUI() {
+  document.getElementById("dateLabel").textContent = dateDisplay(currentDate);
+  const key = dateKey(currentDate);
+
+  // diner buttons
+  document.querySelectorAll(".diner-btn").forEach(b => {
+    b.classList.toggle("active", parseInt(b.dataset.n) === dinerCount);
+  });
+
+  if (savedMenus[key]) {
+    const s = savedMenus[key];
+    currentMenu.mains = s.mains.map(n => [...DEFAULT_MAINS,...(customDishes.mains||[])].find(d=>d.name===n)).filter(Boolean);
+    currentMenu.sides = s.sides.map(n => [...DEFAULT_SIDES,...(customDishes.sides||[])].find(d=>d.name===n)).filter(Boolean);
+    currentMenu.soup = [...DEFAULT_SOUPS,...(customDishes.soups||[])].find(d=>d.name===s.soup) || DEFAULT_SOUPS[0];
+    currentMenu.grain = [...DEFAULT_GRAINS,...(customDishes.grains||[])].find(d=>d.name===s.grain) || DEFAULT_GRAINS[0];
+    if (s.diners) dinerCount = s.diners;
+  } else if (!currentMenu.mains.length) {
+    currentMenu = generateFullMenu();
+  }
+
+  const mc = document.getElementById("menuContent");
+  mc.innerHTML = renderMenu(currentMenu);
+  mc.classList.remove("fade-in"); void mc.offsetWidth; mc.classList.add("fade-in");
+
+  document.getElementById("nutritionBar").innerHTML = renderNutrition(calcNutrition(currentMenu));
+  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+
+  const badge = document.getElementById("savedBadge");
+  if (savedMenus[key]) { badge.textContent="已保存这一天的菜单"; badge.style.display="block"; }
+  else { badge.style.display="none"; }
+}
+
+// ========================================
+// INTERACTIONS
+// ========================================
+function setDiners(n) {
+  dinerCount = n;
+  localStorage.setItem("dinnerDiners", String(n));
+  const key = dateKey(currentDate);
+  if (!savedMenus[key]) {
+    currentMenu = generateFullMenu();
+  }
+  updateUI();
+}
+
+function swapOne(cat, idx) {
+  const dKey = dateKey(currentDate);
+  if (savedMenus[dKey]) { alert("这天已确认菜单，不能更换。"); return; }
+
+  const exclude = {
+    mains: currentMenu.mains.map(d=>d.name),
+    sides: currentMenu.sides.map(d=>d.name),
+    soup: currentMenu.soup.name,
+    grain: currentMenu.grain.name
+  };
+
+  const newMenu = generateFullMenu(exclude);
+
+  if (cat === "main") {
+    currentMenu.mains[idx] = newMenu.mains[0];
+  } else if (cat === "side") {
+    let newSide = newMenu.sides.find(s => !currentMenu.sides.some(cs => cs.name === s.name));
+    if (!newSide) newSide = newMenu.sides[0];
+    currentMenu.sides[idx] = newSide;
+  } else if (cat === "soup") {
+    currentMenu.soup = newMenu.soup;
+  } else if (cat === "grain") {
+    currentMenu.grain = newMenu.grain;
+  }
+
+  const mc = document.getElementById("menuContent");
+  mc.classList.add("shake");
+  setTimeout(()=>mc.classList.remove("shake"),400);
+  setTimeout(()=>{
+    mc.innerHTML = renderMenu(currentMenu);
+    mc.classList.remove("fade-in"); void mc.offsetWidth; mc.classList.add("fade-in");
+    document.getElementById("nutritionBar").innerHTML = renderNutrition(calcNutrition(currentMenu));
+  },200);
+}
+
+function rerollAll() {
+  const dKey = dateKey(currentDate);
+  if (savedMenus[dKey]) { alert("这天已确认菜单，不能更换。"); return; }
+  currentMenu = generateFullMenu({
+    mains: currentMenu.mains.map(d=>d.name),
+    sides: currentMenu.sides.map(d=>d.name),
+    soup: currentMenu.soup.name,
+    grain: currentMenu.grain.name
+  });
+  const mc = document.getElementById("menuContent");
+  mc.classList.add("shake");
+  setTimeout(()=>mc.classList.remove("shake"),400);
+  setTimeout(()=>{
+    mc.innerHTML = renderMenu(currentMenu);
+    mc.classList.remove("fade-in"); void mc.offsetWidth; mc.classList.add("fade-in");
+    document.getElementById("nutritionBar").innerHTML = renderNutrition(calcNutrition(currentMenu));
+  },200);
+}
+
+function changeDate(delta) {
+  const d = new Date(currentDate); d.setDate(d.getDate()+delta);
+  currentDate = d;
+  currentMenu = { mains:[], sides:[], soup:null, grain:null };
+  updateUI();
+}
+
+function saveMenu() {
+  const key = dateKey(currentDate);
+  savedMenus[key] = {
+    mains: currentMenu.mains.map(d=>d.name),
+    sides: currentMenu.sides.map(d=>d.name),
+    soup: currentMenu.soup.name,
+    grain: currentMenu.grain.name,
+    diners: dinerCount
+  };
+  localStorage.setItem("dinnerHistory_v2", JSON.stringify(savedMenus));
+  const badge = document.getElementById("savedBadge");
+  badge.textContent = "已保存！这天就吃这个了";
+
+  badge.style.display = "block";
+}
+
+function showHistory() {
+  const section = document.getElementById("historySection");
+  section.style.display = section.style.display==="none"?"block":"none";
+  if (section.style.display==="block") renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  const entries = Object.entries(savedMenus).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
+  if (!entries.length) { list.innerHTML='<li style="color:#b4b2a9;justify-content:center;">暂无记录</li>'; return; }
+  list.innerHTML = entries.map(([date,info]) => {
+    const parts = info.mains.join("+") + " / " + info.sides.join("+") + " / " + info.soup;
+    const diners = info.diners ? `<span class="h-diners">${info.diners}人</span>` : '';
+    return `<li><span class="h-date">${date}${diners}</span><span class="h-menu">${parts}</span></li>`;
+  }).join('');
+}
+
+// ========================================
+// MANAGE PANEL
+// ========================================
+function toggleManage() {
+  document.getElementById("managePanel").classList.toggle("open");
+  if (document.getElementById("managePanel").classList.contains("open")) {
+    renderManageList();
+  }
+}
+
+function switchTab(cat) {
+  manageTab = cat;
+  addFormTags = [];
+  document.querySelectorAll(".mp-tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
+  renderManageList();
+  renderAddForm();
+}
+
+function renderManageList() {
+  const cat = manageTab;
+  const dishes = getAllDishes(cat);
+  const key = cat==="side"?"sides":cat==="soup"?"soups":cat==="grain"?"grains":"mains";
+  const list = document.getElementById("mpDishList");
+  list.innerHTML = dishes.map((d,i) => {
+    const isOn = !d._hidden;
+    const isCustom = !!d._custom;
+    return `<div class="mp-dish">
+      <div class="mp-dish-info">
+        <div class="mp-dish-name ${isOn?'':'hidden-dish'}">${d.name}${isCustom?'<span class="custom-badge">自定义</span>':''}</div>
+        <div class="mp-dish-desc">${d.desc}</div>
+      </div>
+      ${isCustom ? `<button class="mp-del-btn" onclick="deleteCustom('${key}',${i})">删除</button>` : `<button class="mp-toggle ${isOn?'on':'off'}" onclick="toggleDish('${key}','${d.name}',this)"></button>`}
+    </div>`;
+  }).join('');
+}
+
+function toggleDish(key, name, btn) {
+  const hidden = hiddenDishes[key];
+  const idx = hidden.indexOf(name);
+  if (idx >= 0) hidden.splice(idx, 1);
+  else hidden.push(name);
+  localStorage.setItem("dinnerHidden", JSON.stringify(hiddenDishes));
+  btn.classList.toggle("on", idx < 0);
+  btn.classList.toggle("off", idx >= 0);
+  const nameEl = btn.closest(".mp-dish").querySelector(".mp-dish-name");
+  nameEl.classList.toggle("hidden-dish", idx < 0);
+  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+}
+
+function deleteCustom(key, idx) {
+  if (!confirm("确定删除这个自定义菜品？")) return;
+  customDishes[key].splice(idx, 1);
+  localStorage.setItem("dinnerCustom", JSON.stringify(customDishes));
+  renderManageList();
+  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+}
+
+function renderAddForm() {
+  const cat = manageTab;
+  const extra = document.getElementById("addExtraFields");
+
+  if (cat === "main") {
+    extra.innerHTML = `
+      <div style="display:flex;gap:10px;">
+        <div class="mp-field" style="flex:1"><label>蛋白质来源</label>
+          <select id="addProteinSrc">
+            <option value="chicken">鸡肉</option><option value="pork">猪肉</option>
+            <option value="beef">牛肉</option><option value="fish">鱼</option>
+            <option value="seafood">海鲜/虾</option><option value="tofu">豆腐</option>
+            <option value="egg">鸡蛋</option>
+          </select>
+        </div>
+        <div class="mp-field" style="flex:1"><label>口味</label>
+          <select id="addFlavor">
+            <option value="咸鲜">咸鲜</option><option value="酸甜">酸甜</option>
+            <option value="甜">甜</option><option value="辣">辣</option>
+            <option value="微辣">微辣</option><option value="清淡">清淡</option>
+            <option value="浓郁">浓郁</option><option value="蒜香">蒜香</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div class="mp-field" style="flex:1"><label>颜色特征</label>
+          <select id="addColor">
+            <option value="brown">棕/深色</option><option value="red">红色</option>
+            <option value="green">绿色</option><option value="yellow">黄色</option>
+            <option value="white">白色</option><option value="orange">橙色</option>
+          </select>
+        </div>
+        <div class="mp-field" style="flex:1"><label>是否重口</label>
+          <select id="addHeavy">
+            <option value="false">清淡</option><option value="true">重口</option>
+          </select>
+        </div>
+      </div>`;
+  } else if (cat === "side") {
+    extra.innerHTML = `
+      <div style="display:flex;gap:10px;">
+        <div class="mp-field" style="flex:1"><label>颜色特征</label>
+          <select id="addColor">
+            <option value="green">绿色</option><option value="white">白色</option>
+            <option value="yellow">黄色</option><option value="orange">橙色</option>
+            <option value="black">黑色</option><option value="purple">紫色</option>
+            <option value="mixed">混合</option>
+          </select>
+        </div>
+      </div>`;
+  } else {
+    extra.innerHTML = '';
+  }
+
+  // Tags
+  const tagOpts = cat==="main"?["protein","veggie"]:
+                  cat==="side"?["veggie","protein","quick","staple"]:
+                  cat==="soup"?["light","protein","staple"]:
+                  ["staple","veggie","light"];
+  document.getElementById("addTags").innerHTML = tagOpts.map(t =>
+    `<button class="mp-tag-opt" data-tag="${t}" onclick="toggleAddTag(this,'${t}')">${TAG_MAP[t]?TAG_MAP[t].label:t}</button>`
+  ).join('');
+}
+
+function toggleAddTag(btn, tag) {
+  const idx = addFormTags.indexOf(tag);
+  if (idx >= 0) { addFormTags.splice(idx,1); btn.classList.remove("sel"); }
+  else { addFormTags.push(tag); btn.classList.add("sel"); }
+}
+
+function addCustomDish() {
+  const name = document.getElementById("addName").value.trim();
+  const desc = document.getElementById("addDesc").value.trim();
+  if (!name) { alert("请输入菜品名称"); return; }
+  if (!desc) { alert("请输入菜品简介"); return; }
+
+  const cat = manageTab;
+  const key = cat==="side"?"sides":cat==="soup"?"soups":cat==="grain"?"grains":"mains";
+  if (!customDishes[key]) customDishes[key] = [];
+
+  let dish = { name, desc, tags:[...addFormTags,"custom"] };
+
+  if (cat === "main") {
+    dish.proteinSrc = document.getElementById("addProteinSrc")?.value || "tofu";
+    dish.flavor = document.getElementById("addFlavor")?.value || "咸鲜";
+    dish.color = document.getElementById("addColor")?.value || "brown";
+    dish.heavy = document.getElementById("addHeavy")?.value === "true";
+  } else if (cat === "side") {
+    dish.vegType = "custom";
+    dish.color = document.getElementById("addColor")?.value || "green";
+  } else if (cat === "grain") {
+    dish.grain = "custom";
+  }
+
+  customDishes[key].push(dish);
+  localStorage.setItem("dinnerCustom", JSON.stringify(customDishes));
+
+  // Reset form
+  document.getElementById("addName").value = "";
+  document.getElementById("addDesc").value = "";
+  addFormTags = [];
+  document.querySelectorAll(".mp-tag-opt").forEach(b => b.classList.remove("sel"));
+
+  renderManageList();
+  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+}
+
+// ========================================
+// INIT
+// ========================================
+updateUI();
+</script>
+</body>
+</html>
