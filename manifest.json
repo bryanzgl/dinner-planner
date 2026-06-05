@@ -1,0 +1,22 @@
+{
+  "name": "晚餐帮手 · 今天吃什么",
+  "short_name": "晚餐帮手",
+  "description": "智能搭配晚餐，营养均衡，常换常新",
+  "start_url": "./dinner-planner.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f3ee",
+  "theme_color": "#534AB7",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
