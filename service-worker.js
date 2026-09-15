@@ -1,5 +1,5 @@
 // Service Worker for 三餐帮手 PWA
-const CACHE_NAME = 'meal-planner-v2';
+const CACHE_NAME = 'meal-planner-v3';
 const urlsToCache = [
   './dinner-planner.html',
   './manifest.json'
