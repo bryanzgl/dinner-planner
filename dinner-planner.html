@@ -46,6 +46,7 @@
   .diner-btn{width:42px;height:38px;border-radius:10px;border:.5px solid rgba(0,0,0,.12);background:transparent;font-size:15px;font-weight:500;color:#5f5e5a;cursor:pointer;transition:all .15s}
   .diner-btn.active{background:#534AB7;color:#fff;border-color:#534AB7}
   .diner-btn:hover:not(.active){border-color:#534AB7;color:#534AB7}
+  .diner-hint{font-size:10px;color:#b4b2a9;margin-top:6px;line-height:1.3}
 
   .manage-btn{width:100%;background:transparent;border:.5px solid rgba(0,0,0,.12);border-radius:10px;padding:8px 0;font-size:13px;color:#5f5e5a;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
   .manage-btn:hover{border-color:#534AB7;color:#534AB7;background:#EEEDFE}
@@ -210,6 +211,7 @@
       <button class="diner-btn" data-n="3" onclick="setDiners(3)">3</button>
       <button class="diner-btn" data-n="4" onclick="setDiners(4)">4</button>
     </div>
+    <div class="diner-hint" id="dinerHint"></div>
   </div>
   <div class="ctrl-group" style="flex:0 0 120px;display:flex;flex-direction:column;justify-content:space-between;">
     <div class="ctrl-label">菜品管理</div>
@@ -676,6 +678,47 @@ function pickOne(arr, exclude) {
   return c[Math.floor(Math.random() * c.length)];
 }
 
+// 人数 → 菜品结构（4人升级为 2主菜+2配菜+汤+主食，即"四菜一汤"）
+const DINER_PLAN = {
+  1: {main:1, side:1, lightMain:true},
+  2: {main:1, side:1},
+  3: {main:1, side:2},
+  4: {main:2, side:2}
+};
+const DINER_HINT = {
+  1: "单人份 · 一菜一汤，清淡为主",
+  2: "一荤一素 + 汤 + 主食",
+  3: "一荤两素 + 汤 + 主食",
+  4: "双主菜 + 双配菜 + 汤 + 主食（四菜一汤）"
+};
+const VEG_SRC = ["tofu", "egg"];
+
+// 从候选池中挑一道与已有菜互补的（不同蛋白源 / 不同颜色 / 不过于重口）
+function pickComplement(pool, keepers, catK) {
+  if (!pool || pool.length === 0) return null;
+  if (!keepers || keepers.length === 0) return pool[Math.floor(Math.random()*pool.length)];
+  let c = pool.slice();
+  if (catK === "main" || catK === "lmain") {
+    const srcs = keepers.map(d=>d.proteinSrc).filter(Boolean);
+    let diff = c.filter(d => !srcs.includes(d.proteinSrc));
+    if (diff.length > 0) c = diff;
+    if (keepers.length && keepers.every(d => VEG_SRC.includes(d.proteinSrc))) {
+      const meaty = c.filter(d => !VEG_SRC.includes(d.proteinSrc));
+      if (meaty.length > 0) c = meaty;
+    }
+    if (keepers.some(d => d.heavy)) {
+      const light = c.filter(d => !d.heavy);
+      if (light.length > 0) c = light;
+    }
+  }
+  if (catK === "side" || catK === "lside") {
+    const colors = keepers.map(d=>d.color).filter(Boolean);
+    let diff = c.filter(d => !colors.includes(d.color));
+    if (diff.length > 0) c = diff;
+  }
+  return c[Math.floor(Math.random()*c.length)];
+}
+
 function generateMeal(meal, exclude) {
   exclude = exclude || {};
   const cfg = MEAL_CFG[meal];
@@ -704,23 +747,27 @@ function generateMeal(meal, exclude) {
   const allSoups = getActiveDishes(meal, soupCat);
   const recentProteinSrc = getRecentProteinSrc(meal, 3);
 
-  // 主菜（1道）
+  // 主菜（按人数 1-2 道，4人给"双主菜"）
+  const plan = DINER_PLAN[dinerCount] || DINER_PLAN[2];
   let mains = [];
-  let mainCand = allMains.filter(m => !(recent[mainCat]||[]).includes(m.name));
-  if (exclude[mainCat]) mainCand = mainCand.filter(m => !exclude[mainCat].includes(m.name));
-  let proteinFiltered = mainCand.filter(m => !recentProteinSrc.includes(m.proteinSrc));
-  const mainPool = proteinFiltered.length > 0 ? proteinFiltered : mainCand;
-  const finalMainPool = mainPool.length > 0 ? mainPool : allMains;
-  if (dinerCount === 1) {
-    let lightMains = finalMainPool.filter(m => !m.heavy);
-    mains.push(lightMains.length > 0 ? lightMains[Math.floor(Math.random()*lightMains.length)] : finalMainPool[Math.floor(Math.random()*finalMainPool.length)]);
-  } else {
-    mains.push(finalMainPool[Math.floor(Math.random()*finalMainPool.length)]);
+  let usedMainNames = [...(exclude[mainCat] || [])];
+  for (let i = 0; i < plan.main; i++) {
+    let cand = allMains.filter(m => !(recent[mainCat]||[]).includes(m.name) && !usedMainNames.includes(m.name));
+    let pf = cand.filter(m => !recentProteinSrc.includes(m.proteinSrc));
+    let pool = pf.length > 0 ? pf : cand;
+    if (pool.length === 0) pool = allMains.filter(m => !usedMainNames.includes(m.name));
+    if (pool.length === 0) pool = allMains.slice();
+    if (plan.lightMain && i === 0) {
+      const lightMains = pool.filter(m => !m.heavy);
+      if (lightMains.length > 0) pool = lightMains;
+    }
+    const picked = pickComplement(pool, mains, mainCat);
+    if (picked) { mains.push(picked); usedMainNames.push(picked.name); }
   }
   menu[mainCat] = mains;
 
-  // 配菜（1-2道，按人数）
-  let sideCount = dinerCount <= 2 ? 1 : 2;
+  // 配菜（按人数 1-2 道）
+  let sideCount = plan.side;
   let sides = [];
   let usedSideNames = [...(exclude[sideCat] || [])];
   for (let i = 0; i < sideCount; i++) {
@@ -876,7 +923,7 @@ function renderMenu(meal, menu) {
     const val = menu[c.k];
     if (c.multi && Array.isArray(val)) {
       val.forEach((dish, i) => {
-        const role = val.length > 1 ? (i===0?"主菜":"副菜") : c.n;
+        const role = val.length > 1 ? (c.n + (i===0?"①":"②")) : c.n;
         items.push(`<div class="menu-item">
           <div class="item-info">
             <div class="item-name">${c.icon} ${dish.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">${role}</span>${dish._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
@@ -940,6 +987,12 @@ function updateUI() {
   document.querySelectorAll(".diner-btn").forEach(b => {
     b.classList.toggle("active", parseInt(b.dataset.n) === dinerCount);
   });
+  const dinHintEl = document.getElementById("dinerHint");
+  if (dinHintEl) {
+    dinHintEl.textContent = meal === "breakfast"
+      ? "早餐按人头增减份量即可（每人一份组合）"
+      : (DINER_HINT[dinerCount] || DINER_HINT[2]);
+  }
 
   const key = dateKey(currentDate);
   const dayMenu = savedMenus[key];
@@ -1017,10 +1070,13 @@ function swapOne(catK, idx) {
   const newMenu = generateMeal(currentMeal, currentExclude());
   const val = currentMenu[catK];
   if (Array.isArray(val)) {
-    let nd = newMenu[catK][0];
-    if (newMenu[catK] && newMenu[catK].some(d=>!val.some(v=>v.name===d.name))) {
-      nd = newMenu[catK].find(d=>!val.some(v=>v.name===d.name));
-    }
+    const keep = val.filter((d, i) => i !== idx && d);
+    const keepNames = keep.map(d => d.name);
+    const curNames = val.map(d => d && d.name);
+    let pool = (newMenu[catK]||[]).filter(d => d && !curNames.includes(d.name) && !keepNames.includes(d.name));
+    if (pool.length === 0) pool = (newMenu[catK]||[]).filter(d => d && !keepNames.includes(d.name));
+    if (pool.length === 0) pool = (newMenu[catK]||[]).slice();
+    const nd = pickComplement(pool, keep, catK) || (newMenu[catK]||[])[0];
     currentMenu[catK][idx] = nd;
   } else {
     currentMenu[catK] = newMenu[catK];
