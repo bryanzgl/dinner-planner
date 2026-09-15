@@ -120,6 +120,25 @@
   /* manage panel */
   .manage-panel{max-width:520px;margin:0 auto 16px;background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px;display:none}
   .manage-panel.open{display:block}
+  .tool-row{display:flex;gap:8px;margin-top:14px}
+  .tool-btn{flex:1;background:transparent;border:.5px solid rgba(0,0,0,.12);border-radius:10px;padding:9px 0;font-size:13px;color:#5f5e5a;cursor:pointer;transition:all .15s}
+  .tool-btn:hover{border-color:#534AB7;color:#534AB7;background:#EEEDFE}
+  .side-panel{max-width:520px;margin:16px auto;background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px;display:none}
+  .side-panel.open{display:block}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .panel-head b{font-size:14px;font-weight:500}
+  .panel-close{font-size:12px;color:#b4b2a9;cursor:pointer}
+  .sl-group-title{font-size:12px;color:#888780;margin:14px 0 4px;font-weight:500}
+  .sl-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid rgba(0,0,0,.06);cursor:pointer;font-size:13px;color:#2C2C2A}
+  .sl-item .dot{width:16px;height:16px;border-radius:4px;border:.5px solid rgba(0,0,0,.2);flex:0 0 16px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
+  .sl-item.checked .dot{background:#0F6E56;border-color:#0F6E56}
+  .sl-item.checked .nm{text-decoration:line-through;color:#b4b2a9}
+  .sl-item .from{font-size:11px;color:#b4b2a9;margin-left:auto;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sl-actions{display:flex;gap:8px;margin-top:14px}
+  .sl-actions button{flex:1;background:transparent;border:.5px solid rgba(0,0,0,.12);border-radius:10px;padding:9px 0;font-size:13px;color:#5f5e5a;cursor:pointer}
+  .sl-actions button.primary{background:#534AB7;color:#fff;border-color:#534AB7}
+  .panel-tip{font-size:11px;color:#b4b2a9;margin-top:10px;line-height:1.5}
+  .share-img{width:100%;max-width:300px;border-radius:12px;border:.5px solid rgba(0,0,0,.12);display:block;margin:0 auto}
   .mp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
   .mp-title{font-size:15px;font-weight:500}
   .mp-close{background:transparent;border:none;font-size:18px;color:#888780;cursor:pointer;padding:4px 8px;border-radius:6px}
@@ -223,8 +242,14 @@
 <p class="section-label" id="menuSectionLabel">今日菜单</p>
 <div class="card fade-in" id="menuCard">
   <div id="menuContent"></div>
+  <div class="tool-row">
+    <button class="tool-btn" onclick="toggleShopList()">买菜清单</button>
+    <button class="tool-btn" onclick="toggleShareCard()">生成分享卡片</button>
+  </div>
   <button class="refresh-btn" onclick="rerollAll()">全部换一套</button>
 </div>
+<div class="side-panel" id="shopPanel"></div>
+<div class="side-panel" id="sharePanel"></div>
 
 <p class="section-label">营养评估</p>
 <div class="nutrition-bar" id="nutritionBar"></div>
@@ -255,6 +280,7 @@
     <div class="mp-add-title">添加自定义菜品</div>
     <div class="mp-field"><label>菜品名称</label><input id="addName" placeholder="如：外婆红烧肉"></div>
     <div class="mp-field"><label>简介</label><input id="addDesc" placeholder="如：奶奶的秘方，肥而不腻"></div>
+    <div class="mp-field"><label>食材</label><input id="addIng" placeholder="如：五花肉、冰糖、生抽（逗号分隔，用于买菜清单）"></div>
     <label style="font-size:12px;color:#888780;display:block;margin-bottom:6px;">营养/特点标签</label>
     <div class="mp-tags-row" id="addTags"></div>
     <button class="mp-submit" onclick="addCustomDish()">添加到菜品库</button>
@@ -332,6 +358,150 @@ const NUT_META = {
 // DISH LIBRARY
 // ========================================
 // 早餐：依据黄翔博士"五大金刚"设计（慢碳水 / 胆碱 / Omega-3 / 抗氧化 / 蛋白质）
+const INGREDIENTS = {
+  "燕麦粥": ["燕麦片","牛奶"],
+  "蒸玉米(半根)": ["玉米"],
+  "蒸红薯": ["红薯"],
+  "蒸紫薯": ["紫薯"],
+  "全麦吐司": ["全麦吐司"],
+  "杂粮粥(糙米+小米)": ["糙米","小米"],
+  "藜麦粥": ["藜麦","小米"],
+  "小米粥": ["小米"],
+  "全麦馒头": ["全麦馒头"],
+  "玉米燕麦糊": ["玉米面","燕麦片"],
+  "糙米饭团": ["糙米","海苔"],
+  "水煮全蛋": ["鸡蛋"],
+  "蒸蛋羹": ["鸡蛋"],
+  "蛋黄豆腐羹": ["鸡蛋","嫩豆腐"],
+  "无糖豆浆": ["黄豆"],
+  "豆腐脑": ["内酯豆腐"],
+  "香煎三文鱼": ["三文鱼"],
+  "清蒸鳕鱼": ["鳕鱼"],
+  "虾仁蒸蛋": ["虾仁","鸡蛋"],
+  "香煎鸡胸肉": ["鸡胸肉"],
+  "猪肝泥(少量)": ["猪肝"],
+  "瘦牛肉片": ["牛里脊"],
+  "芝士片": ["芝士片"],
+  "小番茄": ["小番茄"],
+  "蓝莓": ["蓝莓"],
+  "焯拌西兰花": ["西兰花"],
+  "菠菜(焯水)": ["菠菜"],
+  "胡萝卜条": ["胡萝卜"],
+  "橙子片": ["橙子"],
+  "紫甘蓝丝": ["紫甘蓝"],
+  "黄瓜片": ["黄瓜"],
+  "牛油果片": ["牛油果"],
+  "草莓": ["草莓"],
+  "苹果块": ["苹果"],
+  "温牛奶": ["牛奶"],
+  "无糖酸奶": ["无糖酸奶"],
+  "原味核桃(2颗)": ["核桃"],
+  "亚麻籽(撒粥里)": ["亚麻籽"],
+  "黑芝麻糊": ["黑芝麻"],
+  "原味杏仁": ["杏仁"],
+  "无糖豆浆(一杯)": ["黄豆"],
+  "原味腰果": ["腰果"],
+  "番茄炒蛋": ["番茄","鸡蛋"],
+  "宫保鸡丁": ["鸡胸肉","黄瓜","花生米","干辣椒"],
+  "鱼香肉丝": ["猪里脊","干木耳","胡萝卜","青椒"],
+  "红烧鸡腿": ["鸡腿","姜","葱"],
+  "可乐鸡翅": ["鸡翅","可乐"],
+  "青椒肉丝": ["猪里脊","青椒"],
+  "土豆炖牛肉": ["牛腩","土豆","胡萝卜"],
+  "清蒸鲈鱼": ["鲈鱼","姜","葱"],
+  "虾仁滑蛋": ["虾仁","鸡蛋"],
+  "麻婆豆腐": ["嫩豆腐","猪肉末","郫县豆瓣"],
+  "照烧鸡排": ["鸡腿","照烧酱"],
+  "蒜香排骨": ["排骨","蒜"],
+  "香菇滑鸡": ["鸡腿肉","干香菇"],
+  "西兰花炒虾仁": ["虾仁","西兰花"],
+  "咖喱鸡块": ["鸡腿肉","土豆","胡萝卜","咖喱块"],
+  "黑椒牛柳": ["牛里脊","青椒","洋葱","黑胡椒"],
+  "鱼香茄子": ["茄子","猪肉末","蒜"],
+  "清炒西兰花": ["西兰花","蒜"],
+  "炒菠菜": ["菠菜"],
+  "手撕卷心菜": ["卷心菜"],
+  "凉拌黄瓜": ["黄瓜","蒜"],
+  "炒土豆丝": ["土豆","青椒"],
+  "番茄炒包菜": ["包菜","番茄"],
+  "炒胡萝卜丝": ["胡萝卜"],
+  "凉拌木耳": ["干木耳","香菜"],
+  "蒜蓉炒青菜": ["青菜","蒜"],
+  "蒸南瓜": ["南瓜"],
+  "素炒豆芽": ["绿豆芽"],
+  "拌三丝": ["胡萝卜","黄瓜","粉丝"],
+  "米饭": ["大米"],
+  "杂粮饭": ["大米","糙米","小米"],
+  "面条": ["面条"],
+  "蛋炒饭": ["鸡蛋","胡萝卜","豌豆"],
+  "馒头": ["馒头"],
+  "玉米": ["玉米"],
+  "红薯饭": ["大米","红薯"],
+  "全麦卷饼": ["全麦卷饼"],
+  "紫菜蛋花汤": ["紫菜","鸡蛋"],
+  "番茄蛋花汤": ["番茄","鸡蛋"],
+  "冬瓜汤": ["冬瓜"],
+  "豆腐味噌汤": ["嫩豆腐","味噌"],
+  "海带汤": ["海带"],
+  "丝瓜蛋汤": ["丝瓜","鸡蛋"],
+  "菠菜汤": ["菠菜"],
+  "绿豆汤": ["绿豆"],
+  "冬瓜排骨汤": ["排骨","冬瓜"],
+  "玉米排骨汤": ["排骨","玉米","胡萝卜"],
+  "葱油鸡": ["鸡腿","葱","姜"],
+  "香菇蒸鸡": ["鸡腿肉","干香菇"],
+  "口水鸡": ["鸡腿","黄瓜","花生米","辣椒油"],
+  "糖醋里脊": ["猪里脊","番茄酱"],
+  "青椒炒肉片": ["猪里脊","青椒"],
+  "西红柿牛腩": ["牛腩","番茄","洋葱"],
+  "蒜泥白肉": ["五花肉","黄瓜","蒜"],
+  "红烧肉": ["五花肉","冰糖"],
+  "回锅肉": ["五花肉","青蒜","郫县豆瓣"],
+  "照烧三文鱼": ["三文鱼","照烧酱"],
+  "韭黄炒虾仁": ["虾仁","韭黄"],
+  "剁椒蒸鱼头": ["鱼头","剁椒","姜"],
+  "糖醋鱼块": ["草鱼","青椒"],
+  "干锅花菜": ["花菜","五花肉","蒜苗"],
+  "蛋黄焗南瓜": ["南瓜","咸蛋黄"],
+  "香煎豆腐": ["老豆腐","葱"],
+  "地三鲜": ["茄子","土豆","青椒"],
+  "蒜蓉粉丝蒸虾": ["大虾","粉丝","蒜"],
+  "锅包肉": ["猪里脊","胡萝卜"],
+  "可乐排骨": ["排骨","可乐"],
+  "炒油麦菜": ["油麦菜"],
+  "清炒荷兰豆": ["荷兰豆","蒜"],
+  "炒空心菜": ["空心菜"],
+  "炒豌豆苗": ["豌豆苗"],
+  "炒白菜": ["白菜"],
+  "清炒芦笋": ["芦笋"],
+  "清炒蒜苔": ["蒜苔"],
+  "拍黄瓜": ["黄瓜","蒜"],
+  "炒杏鲍菇": ["杏鲍菇","青椒"],
+  "蒜泥蒸茄子": ["茄子","蒜"],
+  "炒莴笋片": ["莴笋"],
+  "凉拌海带丝": ["海带","胡萝卜"],
+  "虎皮青椒": ["青椒","蒜"],
+  "炒藕片": ["莲藕","青椒"],
+  "凉拌西蓝花": ["西兰花","胡萝卜"],
+  "香干炒芹菜": ["香干","芹菜"],
+  "蛋花汤": ["鸡蛋","紫菜"],
+  "紫菜虾皮汤": ["紫菜","虾皮"],
+  "冬瓜虾皮汤": ["冬瓜","虾皮"],
+  "菠菜豆腐汤": ["菠菜","嫩豆腐"],
+  "海带豆腐汤": ["海带","嫩豆腐"],
+  "银耳枸杞汤": ["银耳","枸杞"],
+  "酸辣汤": ["嫩豆腐","干木耳","鸡蛋","胡萝卜"],
+  "鸡蛋菠菜汤": ["鸡蛋","菠菜"],
+  "萝卜排骨汤": ["排骨","白萝卜"],
+  "猪骨莲藕汤": ["猪骨","莲藕"],
+  "山药薏仁粥": ["山药","薏米","大米"],
+  "蛤蜊冬瓜汤": ["蛤蜊","冬瓜"],
+  "冬瓜薏米汤": ["冬瓜","薏米"],
+  "鸡架熬汤": ["鸡架","胡萝卜"],
+  "番茄牛腩汤": ["牛腩","番茄"],
+  "紫薯饭": ["大米","紫薯"]
+};
+
 const LIB = {
   breakfast_carb: [
     {name:"燕麦粥",desc:"慢碳之王，β-葡聚糖让血糖平稳释放，一上午不犯困",nut:["slowcarb","staple"],pot:{slowcarb:95}},
@@ -966,6 +1136,7 @@ function renderNutrition(meal, nut) {
 }
 
 function updateUI() {
+  closeSidePanel('shopPanel'); closeSidePanel('sharePanel');
   const meal = currentMeal;
   const cfg = MEAL_CFG[meal];
 
@@ -1092,6 +1263,7 @@ function rerollAll() {
 }
 
 function refreshMenuView() {
+  closeSidePanel('shopPanel'); closeSidePanel('sharePanel');
   const mc = document.getElementById("menuContent");
   mc.classList.add("shake");
   setTimeout(()=>mc.classList.remove("shake"),400);
@@ -1130,6 +1302,263 @@ function showHistory() {
   const section = document.getElementById("historySection");
   section.style.display = section.style.display==="none"?"block":"none";
   if (section.style.display==="block") renderHistory();
+}
+
+// ========================================
+// SHOPPING LIST
+// ========================================
+const STAPLE_ING = ["蒜","姜","葱","生抽","老抽","冰糖","白醋","料酒","淀粉","盐","油","番茄酱","郫县豆瓣","味噌","咖喱块","照烧酱","辣椒油","干辣椒","黑胡椒","香菜","青蒜","蒜苗","剁椒"];
+const DRY_ING = ["大米","小米","糙米","藜麦","玉米面","面条","馒头","全麦吐司","全麦馒头","全麦卷饼","黄豆","绿豆","薏米","银耳","枸杞","虾皮","紫菜","海带","干木耳","干香菇","粉丝","燕麦片","黑芝麻","核桃","杏仁","腰果","亚麻籽","花生米"];
+// CPS 联盟位：把 {kw} 换成你的联盟搜索链接即可变现（如京东联盟/多多进宝/美团分销）
+const BUY_LINK_TPL = "https://maicai.meituan.com/search?keyword={kw}";
+
+function dishIngredients(dish) {
+  if (!dish) return [];
+  if (dish.ing && dish.ing.length) return dish.ing;
+  return INGREDIENTS[dish.name] || [];
+}
+
+function buildShoppingList() {
+  const cfg = MEAL_CFG[currentMeal];
+  const map = {};
+  cfg.cats.forEach(c => {
+    const val = currentMenu[c.k];
+    const dishes = Array.isArray(val) ? val : (val ? [val] : []);
+    dishes.forEach(d => {
+      if (!d) return;
+      dishIngredients(d).forEach(ing => {
+        if (!map[ing]) map[ing] = [];
+        if (map[ing].indexOf(d.name) < 0) map[ing].push(d.name);
+      });
+    });
+  });
+  const fresh = [], dry = [], staple = [];
+  Object.keys(map).forEach(name => {
+    const item = { name: name, from: map[name] };
+    if (STAPLE_ING.indexOf(name) >= 0) staple.push(item);
+    else if (DRY_ING.indexOf(name) >= 0) dry.push(item);
+    else fresh.push(item);
+  });
+  return { fresh: fresh, dry: dry, staple: staple };
+}
+
+let shopChecked = {};
+function shopKey() { return dateKey(currentDate) + "_" + currentMeal + "_" + dinerCount; }
+function loadShopChecked() {
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem("mealShopChecked") || "{}"); } catch (e) { all = {}; }
+  shopChecked = all[shopKey()] || {};
+}
+function saveShopChecked() {
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem("mealShopChecked") || "{}"); } catch (e) { all = {}; }
+  all[shopKey()] = shopChecked;
+  localStorage.setItem("mealShopChecked", JSON.stringify(all));
+}
+function isShopChecked(it, def) {
+  const v = shopChecked[it.name];
+  return v === undefined ? def : v;
+}
+function toggleShopItem(name) {
+  const g = buildShoppingList();
+  let def = false;
+  g.dry.concat(g.staple).forEach(i => { if (i.name === name) def = true; });
+  shopChecked[name] = !isShopChecked({ name: name }, def);
+  saveShopChecked();
+  renderShopList();
+}
+function slGroupHTML(title, items, defaultChecked) {
+  if (!items.length) return '';
+  return '<div class="sl-group-title">' + title + '</div>' + items.map(it => {
+    const ck = isShopChecked(it, defaultChecked);
+    return '<div class="sl-item ' + (ck ? 'checked' : '') + '" onclick="toggleShopItem(\'' + it.name + '\')">' +
+      '<span class="dot">' + (ck ? '✓' : '') + '</span><span class="nm">' + it.name + '</span>' +
+      '<span class="from">' + it.from.join('、') + '</span></div>';
+  }).join('');
+}
+function renderShopList() {
+  const g = buildShoppingList();
+  const total = g.fresh.length + g.dry.length + g.staple.length;
+  let html = '<div class="panel-head"><b>今日买菜清单</b><span class="panel-close" onclick="closeSidePanel(\'shopPanel\')">关闭</span></div>';
+  if (!total) {
+    html += '<p class="panel-tip">当前菜单还没识别到食材。自定义菜品可在编辑菜品库时补上食材。</p>';
+  } else {
+    html += slGroupHTML('要买的（生鲜 · 蛋奶 · 果蔬）', g.fresh, false);
+    html += slGroupHTML('米面干货（查下家里存量）', g.dry, true);
+    html += slGroupHTML('调料辛香料（基本都有）', g.staple, true);
+    html += '<div class="sl-actions"><button onclick="copyShopList()">复制清单</button>' +
+      '<button class="primary" onclick="openBuyLink()">去下单</button></div>';
+  }
+  document.getElementById('shopPanel').innerHTML = html;
+}
+function needBuyList() {
+  const g = buildShoppingList();
+  const need = [];
+  g.fresh.forEach(it => { if (!isShopChecked(it, false)) need.push(it.name); });
+  g.dry.forEach(it => { if (!isShopChecked(it, true)) need.push(it.name); });
+  g.staple.forEach(it => { if (!isShopChecked(it, true)) need.push(it.name); });
+  return need;
+}
+function toggleShopList() {
+  const p = document.getElementById('shopPanel');
+  if (p.classList.contains('open')) { p.classList.remove('open'); return; }
+  loadShopChecked();
+  renderShopList();
+  p.classList.add('open');
+  p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function closeSidePanel(id) { document.getElementById(id).classList.remove('open'); }
+function copyShopList() {
+  const need = needBuyList();
+  const text = need.length
+    ? ('今日' + MEAL_CFG[currentMeal].name + '买菜清单：' + need.join('、'))
+    : '家里都齐了，今天不用买菜';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () {
+      alert('已复制，去买菜 App 粘贴即可：\n\n' + text);
+    }).catch(function () { prompt('复制这段去下单：', text); });
+  } else {
+    prompt('复制这段去下单：', text);
+  }
+}
+function openBuyLink() {
+  const need = needBuyList();
+  const kw = need.length ? need[0] : '生鲜';
+  window.open(BUY_LINK_TPL.replace('{kw}', encodeURIComponent(kw)), '_blank');
+}
+
+// ========================================
+// SHARE CARD
+// ========================================
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+}
+function clipText(ctx, text, maxW) {
+  if (!text) return '';
+  if (ctx.measureText(text).width <= maxW) return text;
+  let t = text;
+  while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+  return t + '…';
+}
+const CARD_FONT = '"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif';
+
+function buildShareCard() {
+  const cfg = MEAL_CFG[currentMeal];
+  const items = [];
+  cfg.cats.forEach(c => {
+    const val = currentMenu[c.k];
+    const ds = Array.isArray(val) ? val : (val ? [val] : []);
+    ds.forEach(d => { if (d) items.push({ icon: c.icon, cat: c.n, name: d.name, desc: d.desc || '' }); });
+  });
+  const W = 600, PAD = 40, HEAD = 168, ITEM_H = 88, GAP = 10;
+  const H = HEAD + 24 + items.length * (ITEM_H + GAP) + 20 + 64 + 26 + 46;
+  const cv = document.createElement('canvas');
+  const dpr = 2;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = '#534AB7'; ctx.fillRect(0, 0, W, HEAD);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '500 34px ' + CARD_FONT;
+  ctx.fillText('今日' + cfg.name + '吃什么', PAD, 76);
+  ctx.fillStyle = 'rgba(255,255,255,.78)';
+  ctx.font = '400 20px ' + CARD_FONT;
+  ctx.fillText(dateDisplay(currentDate) + ' · ' + dinerCount + '人份 · ' + items.length + '道', PAD, 114);
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.font = '400 18px ' + CARD_FONT;
+  ctx.fillText('三餐帮手 · 智能搭配 常换常新', PAD, 148);
+
+  let y = HEAD + 24;
+  items.forEach(it => {
+    ctx.fillStyle = '#F7F6F3';
+    rrect(ctx, PAD, y, W - 2 * PAD, ITEM_H, 14); ctx.fill();
+    ctx.fillStyle = '#2C2C2A';
+    ctx.font = '30px ' + CARD_FONT;
+    ctx.fillText(it.icon, PAD + 18, y + 57);
+    ctx.font = '500 24px ' + CARD_FONT;
+    ctx.fillStyle = '#2C2C2A';
+    ctx.fillText(clipText(ctx, it.name, W - 2 * PAD - 200), PAD + 68, y + 41);
+    ctx.font = '400 17px ' + CARD_FONT;
+    ctx.fillStyle = '#888780';
+    ctx.fillText(clipText(ctx, it.desc, W - 2 * PAD - 200), PAD + 68, y + 68);
+    ctx.font = '400 16px ' + CARD_FONT;
+    ctx.fillStyle = '#B4B2A9';
+    ctx.textAlign = 'right';
+    ctx.fillText(it.cat, W - PAD - 18, y + 52);
+    ctx.textAlign = 'left';
+    y += ITEM_H + GAP;
+  });
+
+  const nut = calcMealNutrition(currentMeal, currentMenu);
+  let sum = 0;
+  cfg.nut.forEach(k => { sum += (nut[k] || 0); });
+  const avg = cfg.nut.length ? Math.round(sum / cfg.nut.length) : 0;
+  const scoreColor = avg >= 68 ? '#0F6E56' : (avg >= 55 ? '#BA7517' : '#E24B4A');
+  ctx.fillStyle = '#F7F6F3';
+  rrect(ctx, PAD, y, W - 2 * PAD, 64, 14); ctx.fill();
+  ctx.font = '400 18px ' + CARD_FONT;
+  ctx.fillStyle = '#888780';
+  ctx.fillText('营养评估', PAD + 20, y + 38);
+  ctx.font = '500 26px ' + CARD_FONT;
+  ctx.fillStyle = scoreColor;
+  ctx.fillText(avg + '分', PAD + 116, y + 40);
+  const bx = PAD + 186, bw = W - 2 * PAD - 206, by = y + 27;
+  ctx.fillStyle = '#E8E6DF';
+  rrect(ctx, bx, by, bw, 10, 5); ctx.fill();
+  ctx.fillStyle = scoreColor;
+  rrect(ctx, bx, by, Math.max(8, bw * avg / 100), 10, 5); ctx.fill();
+
+  y += 64 + 26;
+  ctx.font = '400 17px ' + CARD_FONT;
+  ctx.fillStyle = '#B4B2A9';
+  ctx.textAlign = 'center';
+  ctx.fillText('每天不重样 · 营养看得见', W / 2, y + 16);
+  ctx.textAlign = 'left';
+  return cv.toDataURL('image/png');
+}
+
+function toggleShareCard() {
+  const p = document.getElementById('sharePanel');
+  if (p.classList.contains('open')) { p.classList.remove('open'); return; }
+  const url = buildShareCard();
+  window.__shareURL = url;
+  p.innerHTML = '<div class="panel-head"><b>分享卡片</b><span class="panel-close" onclick="closeSidePanel(\'sharePanel\')">关闭</span></div>' +
+    '<img class="share-img" src="' + url + '" alt="今日菜单卡片">' +
+    '<div class="sl-actions"><button onclick="downloadShare()">保存 / 下载</button>' +
+    '<button class="primary" onclick="copyShareText()">复制文字版</button></div>' +
+    '<p class="panel-tip">手机上长按图片即可保存到相册，发朋友圈或家长群最好用。</p>';
+  p.classList.add('open');
+  p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function downloadShare() {
+  if (!window.__shareURL) return;
+  const a = document.createElement('a');
+  a.href = window.__shareURL;
+  a.download = '今日' + MEAL_CFG[currentMeal].name + '.png';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function copyShareText() {
+  const cfg = MEAL_CFG[currentMeal];
+  const lines = ['【今日' + cfg.name + '】' + dateDisplay(currentDate) + ' · ' + dinerCount + '人份'];
+  cfg.cats.forEach(c => {
+    const val = currentMenu[c.k];
+    const ds = Array.isArray(val) ? val : (val ? [val] : []);
+    ds.forEach(d => { if (d) lines.push(c.icon + ' ' + c.n + '：' + d.name); });
+  });
+  lines.push('—— 三餐帮手 · 智能搭配');
+  const text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { alert('已复制文字版菜单'); })
+      .catch(function () { prompt('复制这段：', text); });
+  } else {
+    prompt('复制这段：', text);
+  }
 }
 
 function renderHistory() {
@@ -1264,11 +1693,15 @@ function addCustomDish() {
   if (!desc) { alert("请输入菜品简介"); return; }
   const key = libKey(currentMeal, manageCat);
   if (!customDishes[key]) customDishes[key] = [];
-  const dish = {name, desc, tags:[...addFormTags], nut:[...addFormTags]};
+  const ingEl = document.getElementById("addIng");
+  const ingRaw = ingEl ? ingEl.value.trim() : "";
+  const ing = ingRaw ? ingRaw.split(/[,，、\s]+/).filter(Boolean) : [];
+  const dish = {name, desc, ing, tags:[...addFormTags], nut:[...addFormTags]};
   customDishes[key].push(dish);
   localStorage.setItem("mealCustom_v2", JSON.stringify(customDishes));
   document.getElementById("addName").value = "";
   document.getElementById("addDesc").value = "";
+  if (ingEl) ingEl.value = "";
   addFormTags = [];
   document.querySelectorAll(".mp-tag-opt").forEach(b => b.classList.remove("sel"));
   renderManageList();
