@@ -1,7 +1,7 @@
 {
-  "name": "晚餐帮手 · 今天吃什么",
-  "short_name": "晚餐帮手",
-  "description": "智能搭配晚餐，营养均衡，常换常新",
+  "name": "三餐帮手 · 今天吃什么",
+  "short_name": "三餐帮手",
+  "description": "三餐智能搭配，早餐融入脑科学五大金刚，营养均衡，常换常新",
   "start_url": "./dinner-planner.html",
   "display": "standalone",
   "orientation": "portrait",
