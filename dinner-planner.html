@@ -7,18 +7,29 @@
 <meta name="theme-color" content="#534AB7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="晚餐帮手">
+<meta name="apple-mobile-web-app-title" content="三餐帮手">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <!-- End PWA Meta Tags -->
-<title>晚餐帮手 · 今天吃什么</title>
+<title>三餐帮手 · 今天吃什么</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;background:#f5f3ee;min-height:100vh;padding:20px 16px 60px;color:#2c2c2a}
-  .app-header{text-align:center;margin-bottom:20px}
+  .app-header{text-align:center;margin-bottom:16px}
   .app-header h1{font-size:22px;font-weight:500;color:#2c2c2a;letter-spacing:.5px}
   .app-header p{font-size:13px;color:#888780;margin-top:4px}
+
+  /* meal tabs */
+  .meal-tabs{max-width:520px;margin:0 auto 16px;display:flex;gap:8px;background:#fff;border-radius:14px;border:.5px solid rgba(0,0,0,.12);padding:5px}
+  .meal-tab{flex:1;text-align:center;padding:9px 0;border-radius:10px;font-size:14px;color:#5f5e5a;cursor:pointer;transition:all .18s;border:none;background:transparent}
+  .meal-tab.active{background:#534AB7;color:#fff;font-weight:500}
+  .meal-tab:not(.active):hover{background:#EEEDFE;color:#534AB7}
+
+  /* brain tip */
+  .brain-tip{max-width:520px;margin:0 auto 14px;background:linear-gradient(135deg,#EEEDFE 0%,#E6F1FB 100%);border-radius:12px;padding:12px 14px;border:.5px solid rgba(83,74,183,.18)}
+  .brain-tip-title{font-size:12px;font-weight:500;color:#3C3489;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+  .brain-tip p{font-size:11.5px;color:#534AB7;line-height:1.65;opacity:.9}
 
   /* date nav */
   .date-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
@@ -59,6 +70,10 @@
   .tag-quick{color:#3B6D11;border-color:#97C459;background:#EAF3DE}
   .tag-iron{color:#71243B;border-color:#F4C0D1;background:#FBEAF0}
   .tag-custom{color:#534AB7;border-color:#AFA9EC;background:#EEEDFE}
+  .tag-slowcarb{color:#854F0B;border-color:#EF9F27;background:#FAEEDA}
+  .tag-choline{color:#3C3489;border-color:#AFA9EC;background:#EEEDFE}
+  .tag-omega3{color:#185FA5;border-color:#85B7EB;background:#E6F1FB}
+  .tag-antiox{color:#0F6E56;border-color:#5DCAA5;background:#E1F5EE}
   .item-swap-btn{background:transparent;border:.5px solid rgba(0,0,0,.15);border-radius:8px;padding:5px 12px;font-size:12px;color:#888780;cursor:pointer;white-space:nowrap;margin-left:12px;margin-top:2px;flex-shrink:0;transition:all .15s;align-self:center}
   .item-swap-btn:hover{border-color:#534AB7;color:#534AB7;background:#EEEDFE}
   .refresh-btn{width:100%;background:transparent;border:.5px solid rgba(0,0,0,.15);border-radius:10px;padding:9px 0;font-size:13px;color:#5f5e5a;cursor:pointer;margin-top:8px;transition:all .15s}
@@ -67,13 +82,18 @@
   /* nutrition */
   .nutrition-bar{max-width:520px;margin:0 auto 16px}
   .nut-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-  .nut-label{font-size:12px;color:#888780;width:55px;flex-shrink:0}
+  .nut-label{font-size:12px;color:#888780;width:62px;flex-shrink:0}
   .nut-track{flex:1;height:6px;background:rgba(0,0,0,.07);border-radius:3px;overflow:hidden}
   .nut-fill{height:100%;border-radius:3px;transition:width .5s ease}
   .nut-fill-protein{background:#E24B4A}
   .nut-fill-veggie{background:#1D9E75}
   .nut-fill-staple{background:#BA7517}
+  .nut-fill-slowcarb{background:#BA7517}
+  .nut-fill-choline{background:#534AB7}
+  .nut-fill-omega3{background:#185FA5}
+  .nut-fill-antiox{background:#1D9E75}
   .nut-value{font-size:12px;color:#5f5e5a;width:35px;text-align:right;flex-shrink:0}
+  .nut-hint{font-size:11px;color:#BA7517;margin-top:8px;line-height:1.5}
 
   /* action row */
   .action-row{max-width:520px;margin:0 auto;display:flex;gap:10px}
@@ -88,11 +108,13 @@
   .history-card{max-width:520px;margin:0 auto 16px;background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px}
   .history-title{font-size:13px;color:#888780;margin-bottom:12px}
   .history-list{list-style:none}
-  .history-list li{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:.5px solid rgba(0,0,0,.06);font-size:13px}
+  .history-list li{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:.5px solid rgba(0,0,0,.06);font-size:13px;gap:10px}
   .history-list li:last-child{border-bottom:none}
-  .h-date{color:#888780;flex-shrink:0}
-  .h-menu{color:#2c2c2a;text-align:right;max-width:70%;font-size:12px}
-  .h-diners{font-size:11px;color:#b4b2a9;margin-left:4px}
+  .h-date{color:#888780;flex-shrink:0;font-size:12px}
+  .h-meals{flex:1;text-align:right;font-size:12px}
+  .h-meal-row{margin-bottom:4px}
+  .h-meal-tag{color:#b4b2a9;margin-right:4px}
+  .h-menu{color:#2c2c2a}
 
   /* manage panel */
   .manage-panel{max-width:520px;margin:0 auto 16px;background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px;display:none}
@@ -101,8 +123,8 @@
   .mp-title{font-size:15px;font-weight:500}
   .mp-close{background:transparent;border:none;font-size:18px;color:#888780;cursor:pointer;padding:4px 8px;border-radius:6px}
   .mp-close:hover{background:rgba(0,0,0,.06)}
-  .mp-tabs{display:flex;gap:0;border-bottom:1px solid rgba(0,0,0,.1);margin-bottom:16px}
-  .mp-tab{flex:1;text-align:center;padding:8px 0;font-size:13px;color:#888780;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+  .mp-tabs{display:flex;gap:0;border-bottom:1px solid rgba(0,0,0,.1);margin-bottom:16px;flex-wrap:wrap}
+  .mp-tab{flex:1;text-align:center;padding:8px 4px;font-size:12.5px;color:#888780;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;min-width:60px}
   .mp-tab.active{color:#534AB7;border-bottom-color:#534AB7}
   .mp-dish-list{max-height:320px;overflow-y:auto;margin-bottom:14px}
   .mp-dish{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:.5px solid rgba(0,0,0,.05)}
@@ -136,7 +158,7 @@
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
   .fade-in{animation:fadeIn .35s ease}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  
+
   /* PWA install prompt */
   .install-prompt{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid rgba(0,0,0,.1);padding:12px 16px;z-index:1000;box-shadow:0 -2px 10px rgba(0,0,0,.1)}
   .install-prompt.show{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -156,7 +178,18 @@
 
 <div class="app-header">
   <h1>今天吃什么</h1>
-  <p>智能搭配 · 营养均衡 · 常换常新</p>
+  <p>三餐智能搭配 · 营养均衡 · 常换常新</p>
+</div>
+
+<div class="meal-tabs">
+  <button class="meal-tab" data-meal="breakfast" onclick="setMeal('breakfast')">🌅 早餐</button>
+  <button class="meal-tab" data-meal="lunch" onclick="setMeal('lunch')">☀️ 午餐</button>
+  <button class="meal-tab" data-meal="dinner" onclick="setMeal('dinner')">🌙 晚餐</button>
+</div>
+
+<div class="brain-tip" id="brainTip" style="display:none;">
+  <div class="brain-tip-title">🧠 黄翔博士 · 早餐「五大金刚」</div>
+  <p id="brainTipText"></p>
 </div>
 
 <div class="date-nav">
@@ -185,7 +218,7 @@
 </div>
 
 <div class="combo-count" id="comboCount"></div>
-<p class="section-label">今日菜单</p>
+<p class="section-label" id="menuSectionLabel">今日菜单</p>
 <div class="card fade-in" id="menuCard">
   <div id="menuContent"></div>
   <button class="refresh-btn" onclick="rerollAll()">全部换一套</button>
@@ -195,13 +228,13 @@
 <div class="nutrition-bar" id="nutritionBar"></div>
 
 <div class="action-row">
-  <button class="btn-primary" onclick="saveMenu()">确定今天就吃这个</button>
+  <button class="btn-primary" onclick="saveMenu()">确定就吃这个</button>
   <button class="btn-secondary" onclick="showHistory()">历史记录</button>
 </div>
 <div class="saved-badge" id="savedBadge"></div>
 
 <div id="historySection" style="display:none;margin-top:20px;">
-  <p class="section-label">最近的晚餐</p>
+  <p class="section-label">最近记录</p>
   <div class="history-card">
     <div class="history-title">近 7 天记录</div>
     <ul class="history-list" id="historyList"></ul>
@@ -211,22 +244,16 @@
 <!-- manage panel -->
 <div class="manage-panel" id="managePanel">
   <div class="mp-header">
-    <span class="mp-title">菜品库管理</span>
+    <span class="mp-title" id="mpTitle">菜品库管理</span>
     <button class="mp-close" onclick="toggleManage()">✕</button>
   </div>
-  <div class="mp-tabs" id="mpTabs">
-    <div class="mp-tab active" data-cat="main" onclick="switchTab('main')">主菜</div>
-    <div class="mp-tab" data-cat="side" onclick="switchTab('side')">配菜</div>
-    <div class="mp-tab" data-cat="soup" onclick="switchTab('soup')">汤</div>
-    <div class="mp-tab" data-cat="grain" onclick="switchTab('grain')">主食</div>
-  </div>
+  <div class="mp-tabs" id="mpTabs"></div>
   <div class="mp-dish-list" id="mpDishList"></div>
   <div class="mp-add-form" id="mpAddForm">
     <div class="mp-add-title">添加自定义菜品</div>
     <div class="mp-field"><label>菜品名称</label><input id="addName" placeholder="如：外婆红烧肉"></div>
     <div class="mp-field"><label>简介</label><input id="addDesc" placeholder="如：奶奶的秘方，肥而不腻"></div>
-    <div id="addExtraFields"></div>
-    <label style="font-size:12px;color:#888780;display:block;margin-bottom:6px;">特点标签</label>
+    <label style="font-size:12px;color:#888780;display:block;margin-bottom:6px;">营养/特点标签</label>
     <div class="mp-tags-row" id="addTags"></div>
     <button class="mp-submit" onclick="addCustomDish()">添加到菜品库</button>
   </div>
@@ -251,187 +278,334 @@ const installBtn = document.getElementById('installBtn');
 const dismissBtn = document.getElementById('dismissBtn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
   e.preventDefault();
-  // Stash the event so it can be triggered later
   deferredPrompt = e;
-  // Show the install prompt
   installPrompt.classList.add('show');
 });
 
 installBtn.addEventListener('click', async () => {
   if (!deferredPrompt) return;
-  // Show the install prompt
   deferredPrompt.prompt();
-  // Wait for the user to respond to the prompt
   const { outcome } = await deferredPrompt.userChoice;
-  console.log(`User response to the install prompt: ${outcome}`);
-  // Clear the deferredPrompt
   deferredPrompt = null;
-  // Hide the install prompt
   installPrompt.classList.remove('show');
 });
 
 dismissBtn.addEventListener('click', () => {
   installPrompt.classList.remove('show');
-  // Optionally remember user dismissed
   localStorage.setItem('installDismissed', 'true');
 });
 
-// Check if user previously dismissed
 if (localStorage.getItem('installDismissed') === 'true') {
   installPrompt.classList.remove('show');
 }
 
-// Listen for app installed
-window.addEventListener('appinstalled', (evt) => {
-  console.log('App was installed');
+window.addEventListener('appinstalled', () => {
   installPrompt.classList.remove('show');
 });
 
 // ========================================
-// DEFAULT DISH DATABASES
+// TAG MAP
 // ========================================
-const DEFAULT_MAINS = [
-  {name:"红烧鸡腿",desc:"鸡腿肉质嫩，蛋白质高，孩子最爱",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
-  {name:"宫保鸡丁",desc:"花生鸡丁，微辣鲜香，下饭神器",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"微辣",color:"red"},
-  {name:"可乐鸡翅",desc:"香甜入味，孩子最爱，简单易做",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"甜",color:"brown"},
-  {name:"葱油鸡",desc:"白切鸡变体，葱油香气浓郁，低油少盐",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"yellow"},
-  {name:"咖喱鸡块",desc:"浓郁咖喱，土豆胡萝卜同炖，香甜下饭",tags:["protein","veggie"],proteinSrc:"chicken",heavy:true,flavor:"浓郁",color:"yellow"},
-  {name:"香菇蒸鸡",desc:"蒸制保留营养，香菇提鲜，低油健康",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
-  {name:"口水鸡",desc:"川式凉拌鸡，麻辣鲜香，开胃下饭",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"辣",color:"red"},
-  {name:"糖醋里脊",desc:"外酥里嫩，酸甜口味促食欲",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"酸甜",color:"red"},
-  {name:"鱼香肉丝",desc:"四川家常菜，鲜辣咸甜，开胃下饭",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"微辣",color:"red"},
-  {name:"青椒炒肉片",desc:"维C+蛋白质双丰收，快手家常菜",tags:["protein","veggie"],proteinSrc:"pork",heavy:false,flavor:"咸鲜",color:"green"},
-  {name:"土豆炖牛肉",desc:"暖胃补铁，胶原蛋白丰富",tags:["protein"],proteinSrc:"beef",heavy:true,flavor:"咸鲜",color:"brown"},
-  {name:"西红柿牛腩",desc:"酸甜软烂，铁质丰富，老少皆宜",tags:["protein","veggie"],proteinSrc:"beef",heavy:true,flavor:"酸甜",color:"red"},
-  {name:"蒜泥白肉",desc:"瘦猪肉+蒜香酱，低脂高蛋白",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"蒜香",color:"white"},
-  {name:"红烧肉",desc:"肥而不腻，入口即化，经典硬菜",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"咸甜",color:"brown"},
-  {name:"回锅肉",desc:"川菜之魂，蒜苗配五花，香辣下饭",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"微辣",color:"green"},
-  {name:"清蒸鲈鱼",desc:"优质蛋白，DHA丰富，益智健脑",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"清淡",color:"white"},
-  {name:"照烧三文鱼",desc:"Omega-3丰富，益脑益视，微甜鲜香",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"甜",color:"orange"},
-  {name:"韭黄炒虾仁",desc:"高蛋白低脂，锌元素丰富",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"yellow"},
-  {name:"剁椒蒸鱼头",desc:"湘式风味，胶原蛋白充足，鲜辣可口",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"辣",color:"red"},
-  {name:"糖醋鱼块",desc:"酸甜酥脆，鱼肉鲜嫩不腥",tags:["protein"],proteinSrc:"fish",heavy:true,flavor:"酸甜",color:"red"},
-  {name:"虾仁滑蛋",desc:"嫩滑鸡蛋+弹牙虾仁，双重高蛋白",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"yellow"},
-  {name:"麻婆豆腐",desc:"麻辣鲜香，植物蛋白高",tags:["protein"],proteinSrc:"tofu",heavy:false,flavor:"辣",color:"red"},
-  {name:"干锅花菜",desc:"香辣入味，膳食纤维高，热量低",tags:["veggie"],proteinSrc:"tofu",heavy:false,flavor:"微辣",color:"green"},
-  {name:"蛋黄焗南瓜",desc:"软糯香甜，胡萝卜素丰富",tags:["veggie","staple"],proteinSrc:"egg",heavy:false,flavor:"甜",color:"yellow"},
-  {name:"香煎豆腐",desc:"外酥里嫩，植物蛋白高，钙质充足",tags:["protein"],proteinSrc:"tofu",heavy:false,flavor:"咸鲜",color:"yellow"},
-  {name:"番茄炒蛋",desc:"家常经典，酸甜开胃，维生素C丰富",tags:["protein","veggie"],proteinSrc:"egg",heavy:false,flavor:"酸甜",color:"red"},
-  {name:"蒸蛋羹",desc:"嫩滑易消化，高蛋白低脂肪",tags:["protein"],proteinSrc:"egg",heavy:false,flavor:"清淡",color:"yellow"},
-  {name:"地三鲜",desc:"土豆茄子青椒，东北经典素菜",tags:["veggie"],proteinSrc:"tofu",heavy:false,flavor:"咸鲜",color:"green"},
-  {name:"蒜蓉粉丝蒸虾",desc:"蒜香浓郁，粉丝吸汁鲜美",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"蒜香",color:"white"},
-  {name:"锅包肉",desc:"外酥里嫩，酸甜口味，东北名菜",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"酸甜",color:"orange"},
-  {name:"可乐排骨",desc:"香甜入味，骨肉分离，孩子最爱",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"甜",color:"brown"},
-];
+const TAG_MAP = {
+  protein:{label:"蛋白质",cls:"tag-protein"},veggie:{label:"蔬菜",cls:"tag-veggie"},
+  light:{label:"清淡",cls:"tag-light"},staple:{label:"主食",cls:"tag-staple"},
+  quick:{label:"快手",cls:"tag-quick"},iron:{label:"补铁",cls:"tag-iron"},
+  custom:{label:"自选",cls:"tag-custom"},
+  slowcarb:{label:"慢碳水",cls:"tag-slowcarb"},choline:{label:"胆碱",cls:"tag-choline"},
+  omega3:{label:"Omega-3",cls:"tag-omega3"},antiox:{label:"抗氧化",cls:"tag-antiox"}
+};
 
-const DEFAULT_SIDES = [
-  {name:"清炒西兰花",desc:"蒜香十足，膳食纤维高",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"炒菠菜",desc:"铁元素丰富，焯水去草酸",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"炒油麦菜",desc:"清淡爽口，叶酸含量高",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"清炒荷兰豆",desc:"鲜甜脆嫩，维生素C高",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"炒空心菜",desc:"铁+维C，夏季常见时蔬",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"炒豌豆苗",desc:"鲜嫩清甜，叶绿素高",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"手撕卷心菜",desc:"爽脆可口，维C丰富",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"炒白菜",desc:"维C高，促进消化，价格实惠",tags:["veggie","quick"],vegType:"green",color:"white"},
-  {name:"清炒芦笋",desc:"高膳食纤维，抗氧化",tags:["veggie"],vegType:"green",color:"green"},
-  {name:"清炒蒜苔",desc:"杀菌护肝，应季蔬菜",tags:["veggie"],vegType:"green",color:"green"},
-  {name:"拍黄瓜",desc:"清爽解腻，无需加热",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"凉拌黄瓜",desc:"脆嫩清爽，解腻首选",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"凉拌木耳",desc:"膳食纤维高，清脆爽口",tags:["veggie","quick"],vegType:"black",color:"black"},
-  {name:"素炒豆芽",desc:"脆嫩爽口，维生素B丰富",tags:["veggie","quick"],vegType:"yellow",color:"yellow"},
-  {name:"蒸南瓜",desc:"胡萝卜素丰富，甜糯软烂",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
-  {name:"炒胡萝卜丝",desc:"胡萝卜素加倍，炒熟更好吸收",tags:["veggie"],vegType:"orange",color:"orange"},
-  {name:"炒杏鲍菇",desc:"Q弹鲜嫩，氨基酸丰富",tags:["veggie"],vegType:"white",color:"white"},
-  {name:"蒜泥蒸茄子",desc:"蒜香浓郁，花青素丰富",tags:["veggie","quick"],vegType:"purple",color:"purple"},
-  {name:"炒莴笋片",desc:"低热量，钾元素丰富",tags:["veggie"],vegType:"green",color:"green"},
-  {name:"凉拌海带丝",desc:"碘元素丰富，膳食纤维高",tags:["veggie","quick"],vegType:"black",color:"black"},
-  {name:"虎皮青椒",desc:"微辣下饭，维C丰富",tags:["veggie"],vegType:"green",color:"green"},
-  {name:"拌三丝",desc:"胡萝卜/黄瓜/豆腐干，营养多样",tags:["veggie","protein"],vegType:"mixed",color:"mixed"},
-  {name:"炒土豆丝",desc:"酸辣爽脆，百吃不厌",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
-  {name:"炒藕片",desc:"脆嫩清甜，秋季应季菜",tags:["veggie"],vegType:"white",color:"white"},
-  {name:"凉拌西蓝花",desc:"焯水凉拌，保留维C，清爽开胃",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"蒜蓉炒青菜",desc:"百搭青菜，简单快手",tags:["veggie","quick"],vegType:"green",color:"green"},
-  {name:"香干炒芹菜",desc:"植物蛋白+膳食纤维，口感爽脆",tags:["veggie","protein"],vegType:"green",color:"green"},
-];
+const NUT_META = {
+  protein:{label:"蛋白质",fill:"nut-fill-protein"},
+  veggie:{label:"蔬菜",fill:"nut-fill-veggie"},
+  staple:{label:"主食",fill:"nut-fill-staple"},
+  slowcarb:{label:"慢碳水",fill:"nut-fill-slowcarb"},
+  choline:{label:"胆碱",fill:"nut-fill-choline"},
+  omega3:{label:"Omega-3",fill:"nut-fill-omega3"},
+  antiox:{label:"抗氧化",fill:"nut-fill-antiox"}
+};
 
-const DEFAULT_SOUPS = [
-  {name:"紫菜蛋花汤",desc:"碘元素丰富，低热量",tags:["light"],heavy:false,flavor:"清淡"},
-  {name:"番茄蛋花汤",desc:"酸甜可口，维生素C加倍",tags:["light"],heavy:false,flavor:"酸甜"},
-  {name:"蛋花汤",desc:"简单快手，补充蛋白质",tags:["light","protein"],heavy:false,flavor:"清淡"},
-  {name:"豆腐味噌汤",desc:"日式清汤，植物蛋白高",tags:["light","protein"],heavy:false,flavor:"咸鲜"},
-  {name:"紫菜虾皮汤",desc:"碘+钙双补，鲜美快手",tags:["light"],heavy:false,flavor:"清淡"},
-  {name:"冬瓜虾皮汤",desc:"低热量，补钙清淡",tags:["light"],heavy:false,flavor:"清淡"},
-  {name:"菠菜豆腐汤",desc:"铁+钙组合，营养均衡",tags:["light","protein"],heavy:false,flavor:"清淡"},
-  {name:"海带豆腐汤",desc:"补碘+钙，清淡鲜美",tags:["light"],heavy:false,flavor:"清淡"},
-  {name:"银耳枸杞汤",desc:"润肺养颜，甜而不腻",tags:["light"],heavy:false,flavor:"甜"},
-  {name:"绿豆汤",desc:"清热解暑，夏季必备",tags:["light"],heavy:false,flavor:"甜"},
-  {name:"酸辣汤",desc:"开胃助消化，醒神暖胃",tags:["light"],heavy:false,flavor:"微辣"},
-  {name:"鸡蛋菠菜汤",desc:"营养均衡，快手补铁",tags:["light","protein"],heavy:false,flavor:"清淡"},
-  {name:"丝瓜蛋汤",desc:"夏季清凉，甘甜可口",tags:["light"],heavy:false,flavor:"清淡"},
-  {name:"冬瓜排骨汤",desc:"清淡去火，低脂高汤",tags:["protein"],heavy:true,flavor:"清淡"},
-  {name:"玉米排骨汤",desc:"甘甜可口，钙质充足",tags:["protein"],heavy:true,flavor:"甜"},
-  {name:"萝卜排骨汤",desc:"消食助消化，清甜可口",tags:["protein"],heavy:true,flavor:"甜"},
-  {name:"猪骨莲藕汤",desc:"通气健脾，钙质充足",tags:["protein"],heavy:true,flavor:"清淡"},
-  {name:"山药薏仁粥",desc:"健脾养胃，清淡滋补",tags:["light","staple"],heavy:false,flavor:"清淡"},
-  {name:"蛤蜊冬瓜汤",desc:"鲜美补锌，低热量消暑",tags:["light","protein"],heavy:false,flavor:"鲜"},
-  {name:"冬瓜薏米汤",desc:"健脾祛湿，适合夏季",tags:["light"],heavy:false,flavor:"清淡"},
-  {name:"鸡架熬汤",desc:"鲜美低脂，骨胶原丰富",tags:["light","protein"],heavy:false,flavor:"鲜"},
-  {name:"番茄牛腩汤",desc:"酸甜浓郁，高蛋白暖汤",tags:["protein"],heavy:true,flavor:"酸甜"},
-];
+// ========================================
+// DISH LIBRARY
+// ========================================
+// 早餐：依据黄翔博士"五大金刚"设计（慢碳水 / 胆碱 / Omega-3 / 抗氧化 / 蛋白质）
+const LIB = {
+  breakfast_carb: [
+    {name:"燕麦粥",desc:"慢碳之王，β-葡聚糖让血糖平稳释放，一上午不犯困",nut:["slowcarb","staple"],pot:{slowcarb:95}},
+    {name:"蒸玉米(半根)",desc:"慢碳+膳食纤维，香甜饱腹，替代精制主食",nut:["slowcarb","staple"],pot:{slowcarb:85}},
+    {name:"蒸红薯",desc:"慢碳饱腹感强，替代白粥白馒头，耐饿不升糖",nut:["slowcarb","staple"],pot:{slowcarb:85}},
+    {name:"蒸紫薯",desc:"花青素+慢碳，护眼又持续供能",nut:["slowcarb","staple","antiox"],pot:{slowcarb:85,antiox:60}},
+    {name:"全麦吐司",desc:"全麦慢碳，升糖比白面包平缓得多",nut:["slowcarb","staple"],pot:{slowcarb:80}},
+    {name:"杂粮粥(糙米+小米)",desc:"粗细搭配，缓慢释放葡萄糖，脾胃温和",nut:["slowcarb","staple"],pot:{slowcarb:90}},
+    {name:"藜麦粥",desc:"全营养慢碳，慢碳同时蛋白质也高",nut:["slowcarb","staple","protein"],pot:{slowcarb:88,protein:55}},
+    {name:"小米粥",desc:"养胃好消化，温和慢碳，晨起易入口",nut:["slowcarb","staple"],pot:{slowcarb:75}},
+    {name:"全麦馒头",desc:"比白馒头升糖慢，更耐饿",nut:["slowcarb","staple"],pot:{slowcarb:78}},
+    {name:"玉米燕麦糊",desc:"双慢碳快手冲饮，忙碌早晨首选",nut:["slowcarb","staple"],pot:{slowcarb:82}},
+    {name:"糙米饭团",desc:"慢碳便携，孩子手拿着吃也方便",nut:["slowcarb","staple"],pot:{slowcarb:80}}
+  ],
+  breakfast_protein: [
+    {name:"水煮全蛋",desc:"蛋黄胆碱核心来源，管“记得住”，务必吃蛋黄别只吃蛋白",nut:["choline","protein"],pot:{choline:98,protein:70}},
+    {name:"蒸蛋羹",desc:"嫩滑好消化，蛋黄胆碱完整保留",nut:["choline","protein"],pot:{choline:90,protein:65}},
+    {name:"蛋黄豆腐羹",desc:"蛋黄+豆制品，胆碱双补，口感滑嫩",nut:["choline","protein"],pot:{choline:85,protein:60}},
+    {name:"无糖豆浆",desc:"大豆卵磷脂，植物胆碱来源",nut:["choline","protein"],pot:{choline:65,protein:55}},
+    {name:"豆腐脑",desc:"豆制品胆碱，软嫩易食，老少皆宜",nut:["choline","protein"],pot:{choline:60,protein:50}},
+    {name:"香煎三文鱼",desc:"Omega-3(DHA)+优质蛋白，双料补脑",nut:["omega3","protein"],pot:{omega3:92,protein:80}},
+    {name:"清蒸鳕鱼",desc:"深海鱼Omega-3，刺少适合孩子",nut:["omega3","protein"],pot:{omega3:88,protein:78}},
+    {name:"虾仁蒸蛋",desc:"虾蛋白+蛋黄胆碱，鲜香嫩滑",nut:["choline","protein"],pot:{choline:82,protein:75}},
+    {name:"香煎鸡胸肉",desc:"优质蛋白，胆碱辅助，低脂饱腹",nut:["choline","protein"],pot:{choline:55,protein:78}},
+    {name:"猪肝泥(少量)",desc:"胆碱+铁双补，补脑补血，每周1-2次少量",nut:["choline","protein","iron"],pot:{choline:85,protein:70}},
+    {name:"瘦牛肉片",desc:"优质蛋白+铁，增强耐力不易饿",nut:["protein","iron"],pot:{protein:80}},
+    {name:"芝士片",desc:"蛋白+钙，早餐少量配吐司",nut:["protein"],pot:{protein:60}}
+  ],
+  breakfast_fruitveg: [
+    {name:"小番茄",desc:"红色抗氧化，维C护脑，一口一个",nut:["antiox"],pot:{antiox:88}},
+    {name:"蓝莓",desc:"紫色花青素，清除大脑自由基的高手",nut:["antiox"],pot:{antiox:95}},
+    {name:"焯拌西兰花",desc:"绿色，抗氧化+胆碱双料，健脑蔬菜",nut:["antiox","choline"],pot:{antiox:85,choline:60}},
+    {name:"菠菜(焯水)",desc:"深绿，叶酸+抗氧化物，焯水去草酸更好吸收",nut:["antiox","iron"],pot:{antiox:80}},
+    {name:"胡萝卜条",desc:"橙色素护眼，维A充足",nut:["antiox"],pot:{antiox:75}},
+    {name:"橙子片",desc:"维C满满，清爽开胃，晨起提神",nut:["antiox"],pot:{antiox:85}},
+    {name:"紫甘蓝丝",desc:"紫色花青素，抗氧化力强",nut:["antiox"],pot:{antiox:82}},
+    {name:"黄瓜片",desc:"清爽补水，低热量，快手无需烹饪",nut:["antiox"],pot:{antiox:60}},
+    {name:"牛油果片",desc:"优质脂肪，维护神经细胞膜",nut:["antiox","omega3"],pot:{antiox:65,omega3:60}},
+    {name:"草莓",desc:"维C+抗氧化物，孩子爱吃",nut:["antiox"],pot:{antiox:88}},
+    {name:"苹果块",desc:"温和果胶，晨起肠胃好入口",nut:["antiox"],pot:{antiox:70}}
+  ],
+  breakfast_drink: [
+    {name:"温牛奶",desc:"优质蛋白+钙，晨起温饮暖胃",nut:["protein"],pot:{protein:70}},
+    {name:"无糖酸奶",desc:"益生菌+蛋白，肠胃友好，可配水果",nut:["protein"],pot:{protein:68}},
+    {name:"原味核桃(2颗)",desc:"Omega-3植物来源，健脑坚果首选",nut:["omega3"],pot:{omega3:88}},
+    {name:"亚麻籽(撒粥里)",desc:"植物Omega-3，拌粥撒一勺即食",nut:["omega3"],pot:{omega3:85}},
+    {name:"黑芝麻糊",desc:"优质脂肪+钙，香浓暖胃",nut:["omega3","protein"],pot:{omega3:60,protein:45}},
+    {name:"原味杏仁",desc:"维E+优质脂肪，抗氧化小食",nut:["omega3","antiox"],pot:{omega3:70,antiox:65}},
+    {name:"无糖豆浆(一杯)",desc:"植物蛋白，乳糖不耐受也友好",nut:["protein"],pot:{protein:58}},
+    {name:"原味腰果",desc:"优质脂肪+矿物质，香脆可口",nut:["omega3"],pot:{omega3:65}}
+  ],
+  lunch_lmain: [
+    {name:"番茄炒蛋",desc:"酸甜开胃，经典快手，孩子最爱",tags:["protein","veggie"],proteinSrc:"egg",heavy:false,flavor:"酸甜",color:"red"},
+    {name:"宫保鸡丁",desc:"花生鸡丁，微辣鲜香，下饭神器",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"微辣",color:"red"},
+    {name:"鱼香肉丝",desc:"鲜辣咸甜，开胃下饭，便当常客",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"微辣",color:"red"},
+    {name:"红烧鸡腿",desc:"肉质嫩，蛋白质高，孩子最爱",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
+    {name:"可乐鸡翅",desc:"香甜入味，简单易做",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"甜",color:"brown"},
+    {name:"青椒肉丝",desc:"维C+蛋白质双丰收，快手家常",tags:["protein","veggie"],proteinSrc:"pork",heavy:false,flavor:"咸鲜",color:"green"},
+    {name:"土豆炖牛肉",desc:"暖胃补铁，胶原蛋白丰富",tags:["protein"],proteinSrc:"beef",heavy:true,flavor:"咸鲜",color:"brown"},
+    {name:"清蒸鲈鱼",desc:"优质蛋白，DHA丰富，益智健脑",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"清淡",color:"white"},
+    {name:"虾仁滑蛋",desc:"嫩滑鸡蛋+弹牙虾仁，双重高蛋白",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"yellow"},
+    {name:"麻婆豆腐",desc:"麻辣鲜香，植物蛋白高",tags:["protein"],proteinSrc:"tofu",heavy:false,flavor:"辣",color:"red"},
+    {name:"照烧鸡排",desc:"快手便当，甜咸入味，孩子喜欢",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"甜",color:"brown"},
+    {name:"蒜香排骨",desc:"补钙，蒜香浓郁，啃着香",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"蒜香",color:"brown"},
+    {name:"香菇滑鸡",desc:"蒸制健康低油，香菇提鲜",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
+    {name:"西兰花炒虾仁",desc:"蛋白+维C，清爽不油腻",tags:["protein","veggie"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"green"},
+    {name:"咖喱鸡块",desc:"浓郁咖喱，香甜下饭",tags:["protein"],proteinSrc:"chicken",heavy:true,flavor:"浓郁",color:"yellow"},
+    {name:"黑椒牛柳",desc:"补铁增耐力，肉质嫩滑",tags:["protein"],proteinSrc:"beef",heavy:false,flavor:"微辣",color:"brown"},
+    {name:"蒸蛋羹",desc:"嫩滑易消化，高蛋白低脂肪",tags:["protein"],proteinSrc:"egg",heavy:false,flavor:"清淡",color:"yellow"},
+    {name:"鱼香茄子",desc:"下饭素菜，软糯入味",tags:["veggie"],proteinSrc:"tofu",heavy:false,flavor:"微辣",color:"purple"}
+  ],
+  lunch_lside: [
+    {name:"清炒西兰花",desc:"蒜香十足，膳食纤维高",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"炒菠菜",desc:"铁元素丰富，焯水去草酸",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"手撕卷心菜",desc:"爽脆可口，维C丰富",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"凉拌黄瓜",desc:"脆嫩清爽，解腻首选",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"炒土豆丝",desc:"酸辣爽脆，百吃不厌",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
+    {name:"番茄炒包菜",desc:"酸甜开胃，维C高",tags:["veggie","quick"],vegType:"green",color:"red"},
+    {name:"炒胡萝卜丝",desc:"胡萝卜素加倍，炒熟更好吸收",tags:["veggie"],vegType:"orange",color:"orange"},
+    {name:"凉拌木耳",desc:"膳食纤维高，清脆爽口",tags:["veggie","quick"],vegType:"black",color:"black"},
+    {name:"蒜蓉炒青菜",desc:"百搭青菜，简单快手",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"蒸南瓜",desc:"胡萝卜素丰富，甜糯软烂",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
+    {name:"素炒豆芽",desc:"脆嫩爽口，维生素B丰富",tags:["veggie","quick"],vegType:"yellow",color:"yellow"},
+    {name:"拌三丝",desc:"胡萝卜/黄瓜/豆腐干，营养多样",tags:["veggie","protein"],vegType:"mixed",color:"mixed"}
+  ],
+  lunch_lgrain: [
+    {name:"米饭",desc:"白米饭，经典主食",tags:["staple"],grain:"rice"},
+    {name:"杂粮饭",desc:"糙米+小米+黑米，营养翻倍",tags:["staple"],grain:"mixed"},
+    {name:"面条",desc:"汤面或拌面，简单一锅出",tags:["staple"],grain:"noodle"},
+    {name:"蛋炒饭",desc:"米饭+鸡蛋，一锅解决",tags:["staple","protein"],grain:"rice"},
+    {name:"馒头",desc:"北方主食，松软可口",tags:["staple"],grain:"wheat"},
+    {name:"玉米",desc:"煮甜玉米，膳食纤维高",tags:["staple","veggie"],grain:"corn"},
+    {name:"红薯饭",desc:"白米饭+红薯块，香甜软糯",tags:["staple"],grain:"mixed"},
+    {name:"全麦卷饼",desc:"卷菜卷肉，便当方便携带",tags:["staple"],grain:"wheat"}
+  ],
+  lunch_lsoup: [
+    {name:"紫菜蛋花汤",desc:"碘元素丰富，低热量",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"番茄蛋花汤",desc:"酸甜可口，维生素C加倍",tags:["light"],heavy:false,flavor:"酸甜"},
+    {name:"冬瓜汤",desc:"低热量，清淡解腻",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"豆腐味噌汤",desc:"日式清汤，植物蛋白高",tags:["light","protein"],heavy:false,flavor:"咸鲜"},
+    {name:"海带汤",desc:"补碘，膳食纤维高",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"丝瓜蛋汤",desc:"夏季清凉，甘甜可口",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"菠菜汤",desc:"快手补铁，清爽",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"绿豆汤",desc:"清热解暑，夏季必备",tags:["light"],heavy:false,flavor:"甜"},
+    {name:"冬瓜排骨汤",desc:"清淡去火，低脂高汤",tags:["protein"],heavy:true,flavor:"清淡"},
+    {name:"玉米排骨汤",desc:"甘甜可口，钙质充足",tags:["protein"],heavy:true,flavor:"甜"}
+  ],
+  dinner_main: [
+    {name:"红烧鸡腿",desc:"鸡腿肉质嫩，蛋白质高，孩子最爱",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
+    {name:"宫保鸡丁",desc:"花生鸡丁，微辣鲜香，下饭神器",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"微辣",color:"red"},
+    {name:"可乐鸡翅",desc:"香甜入味，孩子最爱，简单易做",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"甜",color:"brown"},
+    {name:"葱油鸡",desc:"白切鸡变体，葱油香气浓郁，低油少盐",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"yellow"},
+    {name:"咖喱鸡块",desc:"浓郁咖喱，土豆胡萝卜同炖，香甜下饭",tags:["protein","veggie"],proteinSrc:"chicken",heavy:true,flavor:"浓郁",color:"yellow"},
+    {name:"香菇蒸鸡",desc:"蒸制保留营养，香菇提鲜，低油健康",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"咸鲜",color:"brown"},
+    {name:"口水鸡",desc:"川式凉拌鸡，麻辣鲜香，开胃下饭",tags:["protein"],proteinSrc:"chicken",heavy:false,flavor:"辣",color:"red"},
+    {name:"糖醋里脊",desc:"外酥里嫩，酸甜口味促食欲",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"酸甜",color:"red"},
+    {name:"鱼香肉丝",desc:"四川家常菜，鲜辣咸甜，开胃下饭",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"微辣",color:"red"},
+    {name:"青椒炒肉片",desc:"维C+蛋白质双丰收，快手家常菜",tags:["protein","veggie"],proteinSrc:"pork",heavy:false,flavor:"咸鲜",color:"green"},
+    {name:"土豆炖牛肉",desc:"暖胃补铁，胶原蛋白丰富",tags:["protein"],proteinSrc:"beef",heavy:true,flavor:"咸鲜",color:"brown"},
+    {name:"西红柿牛腩",desc:"酸甜软烂，铁质丰富，老少皆宜",tags:["protein","veggie"],proteinSrc:"beef",heavy:true,flavor:"酸甜",color:"red"},
+    {name:"蒜泥白肉",desc:"瘦猪肉+蒜香酱，低脂高蛋白",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"蒜香",color:"white"},
+    {name:"红烧肉",desc:"肥而不腻，入口即化，经典硬菜",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"咸甜",color:"brown"},
+    {name:"回锅肉",desc:"川菜之魂，蒜苗配五花，香辣下饭",tags:["protein"],proteinSrc:"pork",heavy:false,flavor:"微辣",color:"green"},
+    {name:"清蒸鲈鱼",desc:"优质蛋白，DHA丰富，益智健脑",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"清淡",color:"white"},
+    {name:"照烧三文鱼",desc:"Omega-3丰富，益脑益视，微甜鲜香",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"甜",color:"orange"},
+    {name:"韭黄炒虾仁",desc:"高蛋白低脂，锌元素丰富",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"yellow"},
+    {name:"剁椒蒸鱼头",desc:"湘式风味，胶原蛋白充足，鲜辣可口",tags:["protein"],proteinSrc:"fish",heavy:false,flavor:"辣",color:"red"},
+    {name:"糖醋鱼块",desc:"酸甜酥脆，鱼肉鲜嫩不腥",tags:["protein"],proteinSrc:"fish",heavy:true,flavor:"酸甜",color:"red"},
+    {name:"虾仁滑蛋",desc:"嫩滑鸡蛋+弹牙虾仁，双重高蛋白",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"咸鲜",color:"yellow"},
+    {name:"麻婆豆腐",desc:"麻辣鲜香，植物蛋白高",tags:["protein"],proteinSrc:"tofu",heavy:false,flavor:"辣",color:"red"},
+    {name:"干锅花菜",desc:"香辣入味，膳食纤维高，热量低",tags:["veggie"],proteinSrc:"tofu",heavy:false,flavor:"微辣",color:"green"},
+    {name:"蛋黄焗南瓜",desc:"软糯香甜，胡萝卜素丰富",tags:["veggie","staple"],proteinSrc:"egg",heavy:false,flavor:"甜",color:"yellow"},
+    {name:"香煎豆腐",desc:"外酥里嫩，植物蛋白高，钙质充足",tags:["protein"],proteinSrc:"tofu",heavy:false,flavor:"咸鲜",color:"yellow"},
+    {name:"番茄炒蛋",desc:"家常经典，酸甜开胃，维生素C丰富",tags:["protein","veggie"],proteinSrc:"egg",heavy:false,flavor:"酸甜",color:"red"},
+    {name:"蒸蛋羹",desc:"嫩滑易消化，高蛋白低脂肪",tags:["protein"],proteinSrc:"egg",heavy:false,flavor:"清淡",color:"yellow"},
+    {name:"地三鲜",desc:"土豆茄子青椒，东北经典素菜",tags:["veggie"],proteinSrc:"tofu",heavy:false,flavor:"咸鲜",color:"green"},
+    {name:"蒜蓉粉丝蒸虾",desc:"蒜香浓郁，粉丝吸汁鲜美",tags:["protein"],proteinSrc:"seafood",heavy:false,flavor:"蒜香",color:"white"},
+    {name:"锅包肉",desc:"外酥里嫩，酸甜口味，东北名菜",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"酸甜",color:"orange"},
+    {name:"可乐排骨",desc:"香甜入味，骨肉分离，孩子最爱",tags:["protein"],proteinSrc:"pork",heavy:true,flavor:"甜",color:"brown"}
+  ],
+  dinner_side: [
+    {name:"清炒西兰花",desc:"蒜香十足，膳食纤维高",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"炒菠菜",desc:"铁元素丰富，焯水去草酸",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"炒油麦菜",desc:"清淡爽口，叶酸含量高",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"清炒荷兰豆",desc:"鲜甜脆嫩，维生素C高",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"炒空心菜",desc:"铁+维C，夏季常见时蔬",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"炒豌豆苗",desc:"鲜嫩清甜，叶绿素高",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"手撕卷心菜",desc:"爽脆可口，维C丰富",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"炒白菜",desc:"维C高，促进消化，价格实惠",tags:["veggie","quick"],vegType:"green",color:"white"},
+    {name:"清炒芦笋",desc:"高膳食纤维，抗氧化",tags:["veggie"],vegType:"green",color:"green"},
+    {name:"清炒蒜苔",desc:"杀菌护肝，应季蔬菜",tags:["veggie"],vegType:"green",color:"green"},
+    {name:"拍黄瓜",desc:"清爽解腻，无需加热",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"凉拌黄瓜",desc:"脆嫩清爽，解腻首选",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"凉拌木耳",desc:"膳食纤维高，清脆爽口",tags:["veggie","quick"],vegType:"black",color:"black"},
+    {name:"素炒豆芽",desc:"脆嫩爽口，维生素B丰富",tags:["veggie","quick"],vegType:"yellow",color:"yellow"},
+    {name:"蒸南瓜",desc:"胡萝卜素丰富，甜糯软烂",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
+    {name:"炒胡萝卜丝",desc:"胡萝卜素加倍，炒熟更好吸收",tags:["veggie"],vegType:"orange",color:"orange"},
+    {name:"炒杏鲍菇",desc:"Q弹鲜嫩，氨基酸丰富",tags:["veggie"],vegType:"white",color:"white"},
+    {name:"蒜泥蒸茄子",desc:"蒜香浓郁，花青素丰富",tags:["veggie","quick"],vegType:"purple",color:"purple"},
+    {name:"炒莴笋片",desc:"低热量，钾元素丰富",tags:["veggie"],vegType:"green",color:"green"},
+    {name:"凉拌海带丝",desc:"碘元素丰富，膳食纤维高",tags:["veggie","quick"],vegType:"black",color:"black"},
+    {name:"虎皮青椒",desc:"微辣下饭，维C丰富",tags:["veggie"],vegType:"green",color:"green"},
+    {name:"拌三丝",desc:"胡萝卜/黄瓜/豆腐干，营养多样",tags:["veggie","protein"],vegType:"mixed",color:"mixed"},
+    {name:"炒土豆丝",desc:"酸辣爽脆，百吃不厌",tags:["veggie","staple"],vegType:"yellow",color:"yellow"},
+    {name:"炒藕片",desc:"脆嫩清甜，秋季应季菜",tags:["veggie"],vegType:"white",color:"white"},
+    {name:"凉拌西蓝花",desc:"焯水凉拌，保留维C，清爽开胃",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"蒜蓉炒青菜",desc:"百搭青菜，简单快手",tags:["veggie","quick"],vegType:"green",color:"green"},
+    {name:"香干炒芹菜",desc:"植物蛋白+膳食纤维，口感爽脆",tags:["veggie","protein"],vegType:"green",color:"green"}
+  ],
+  dinner_soup: [
+    {name:"紫菜蛋花汤",desc:"碘元素丰富，低热量",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"番茄蛋花汤",desc:"酸甜可口，维生素C加倍",tags:["light"],heavy:false,flavor:"酸甜"},
+    {name:"蛋花汤",desc:"简单快手，补充蛋白质",tags:["light","protein"],heavy:false,flavor:"清淡"},
+    {name:"豆腐味噌汤",desc:"日式清汤，植物蛋白高",tags:["light","protein"],heavy:false,flavor:"咸鲜"},
+    {name:"紫菜虾皮汤",desc:"碘+钙双补，鲜美快手",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"冬瓜虾皮汤",desc:"低热量，补钙清淡",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"菠菜豆腐汤",desc:"铁+钙组合，营养均衡",tags:["light","protein"],heavy:false,flavor:"清淡"},
+    {name:"海带豆腐汤",desc:"补碘+钙，清淡鲜美",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"银耳枸杞汤",desc:"润肺养颜，甜而不腻",tags:["light"],heavy:false,flavor:"甜"},
+    {name:"绿豆汤",desc:"清热解暑，夏季必备",tags:["light"],heavy:false,flavor:"甜"},
+    {name:"酸辣汤",desc:"开胃助消化，醒神暖胃",tags:["light"],heavy:false,flavor:"微辣"},
+    {name:"鸡蛋菠菜汤",desc:"营养均衡，快手补铁",tags:["light","protein"],heavy:false,flavor:"清淡"},
+    {name:"丝瓜蛋汤",desc:"夏季清凉，甘甜可口",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"冬瓜排骨汤",desc:"清淡去火，低脂高汤",tags:["protein"],heavy:true,flavor:"清淡"},
+    {name:"玉米排骨汤",desc:"甘甜可口，钙质充足",tags:["protein"],heavy:true,flavor:"甜"},
+    {name:"萝卜排骨汤",desc:"消食助消化，清甜可口",tags:["protein"],heavy:true,flavor:"甜"},
+    {name:"猪骨莲藕汤",desc:"通气健脾，钙质充足",tags:["protein"],heavy:true,flavor:"清淡"},
+    {name:"山药薏仁粥",desc:"健脾养胃，清淡滋补",tags:["light","staple"],heavy:false,flavor:"清淡"},
+    {name:"蛤蜊冬瓜汤",desc:"鲜美补锌，低热量消暑",tags:["light","protein"],heavy:false,flavor:"鲜"},
+    {name:"冬瓜薏米汤",desc:"健脾祛湿，适合夏季",tags:["light"],heavy:false,flavor:"清淡"},
+    {name:"鸡架熬汤",desc:"鲜美低脂，骨胶原丰富",tags:["light","protein"],heavy:false,flavor:"鲜"},
+    {name:"番茄牛腩汤",desc:"酸甜浓郁，高蛋白暖汤",tags:["protein"],heavy:true,flavor:"酸甜"}
+  ],
+  dinner_grain: [
+    {name:"米饭",desc:"白米饭，经典主食",tags:["staple"],grain:"rice"},
+    {name:"杂粮饭",desc:"糙米+小米+黑米，营养翻倍",tags:["staple"],grain:"mixed"},
+    {name:"小米粥",desc:"养胃安神，易消化",tags:["staple","light"],grain:"millet"},
+    {name:"面条",desc:"番茄鸡蛋面，简单一锅出",tags:["staple"],grain:"noodle"},
+    {name:"玉米",desc:"煮甜玉米，膳食纤维高",tags:["staple","veggie"],grain:"corn"},
+    {name:"红薯饭",desc:"白米饭+红薯块，香甜软糯",tags:["staple"],grain:"mixed"},
+    {name:"紫薯饭",desc:"花青素丰富，颜色好看孩子爱吃",tags:["staple"],grain:"mixed"},
+    {name:"馒头",desc:"北方主食，松软可口",tags:["staple"],grain:"wheat"}
+  ]
+};
 
-const DEFAULT_GRAINS = [
-  {name:"米饭",desc:"白米饭，经典主食",tags:["staple"],grain:"rice"},
-  {name:"杂粮饭",desc:"糙米+小米+黑米，营养翻倍",tags:["staple"],grain:"mixed"},
-  {name:"小米粥",desc:"养胃安神，易消化",tags:["staple","light"],grain:"millet"},
-  {name:"面条",desc:"番茄鸡蛋面，简单一锅出",tags:["staple"],grain:"noodle"},
-  {name:"玉米",desc:"煮甜玉米，膳食纤维高",tags:["staple","veggie"],grain:"corn"},
-  {name:"红薯饭",desc:"白米饭+红薯块，香甜软糯",tags:["staple"],grain:"mixed"},
-  {name:"紫薯饭",desc:"花青素丰富，颜色好看孩子爱吃",tags:["staple"],grain:"mixed"},
-  {name:"馒头",desc:"北方主食，松软可口",tags:["staple"],grain:"wheat"},
-];
+// ========================================
+// MEAL CONFIG
+// ========================================
+const MEAL_CFG = {
+  breakfast:{
+    name:"早餐", icon:"🌅",
+    tip:"早餐不是“吃饱”，是让血糖平稳持续释放。凑齐慢碳水、胆碱、Omega-3、抗氧化、蛋白质，孩子一上午记得住、坐得稳。蛋黄务必吃，别只吃蛋白。",
+    cats:[
+      {k:"carb",n:"慢碳主食",icon:"🌽"},
+      {k:"protein",n:"蛋白·胆碱",icon:"🥚"},
+      {k:"fruitveg",n:"果蔬",icon:"🫐"},
+      {k:"drink",n:"奶·坚果",icon:"🥛"}
+    ],
+    nut:["slowcarb","choline","omega3","antiox","protein"]
+  },
+  lunch:{
+    name:"午餐", icon:"☀️",
+    tip:"午餐承上启下，主食+蛋白+蔬菜都要有。黄翔博士建议：中午吃剩的晚上吃没问题，不超过24小时都新鲜；别吃隔夜菜和预制菜。",
+    cats:[
+      {k:"lmain",n:"主菜",icon:"🍖",multi:true},
+      {k:"lside",n:"配菜",icon:"🥬",multi:true},
+      {k:"lgrain",n:"主食",icon:"🍚"},
+      {k:"lsoup",n:"汤",icon:"🍲"}
+    ],
+    nut:["protein","veggie","staple"]
+  },
+  dinner:{
+    name:"晚餐", icon:"🌙",
+    tip:"晚餐是记忆“刻盘”时间，黄翔博士强调：晚上要摄入足量蛋白质（鱼、肉、蛋、奶），树突棘才能发芽，短期记忆变长期记忆。建议睡前4小时吃完。",
+    cats:[
+      {k:"main",n:"主菜",icon:"🍖",multi:true},
+      {k:"side",n:"配菜",icon:"🥬",multi:true},
+      {k:"soup",n:"汤",icon:"🍲"},
+      {k:"grain",n:"主食",icon:"🍚"}
+    ],
+    nut:["protein","veggie","staple"]
+  }
+};
 
 // ========================================
 // STATE
 // ========================================
+let currentMeal = localStorage.getItem("mealCurrent") || "dinner";
+if (!MEAL_CFG[currentMeal]) currentMeal = "dinner";
 let currentDate = new Date(); currentDate.setHours(0,0,0,0);
-let dinerCount = parseInt(localStorage.getItem("dinnerDiners") || "2");
-let currentMenu = { mains:[], sides:[], soups:[], grain:null };
-let savedMenus = JSON.parse(localStorage.getItem("dinnerHistory_v2") || "{}");
-let hiddenDishes = JSON.parse(localStorage.getItem("dinnerHidden") || '{"mains":[],"sides":[],"soups":[],"grains":[]}');
-let customDishes = JSON.parse(localStorage.getItem("dinnerCustom") || '{"mains":[],"sides":[],"soups":[],"grains":[]}');
-let manageTab = "main";
+let dinerCount = parseInt(localStorage.getItem("mealDiners") || "2");
+let currentMenu = {};
+let savedMenus = JSON.parse(localStorage.getItem("mealHistory_v3") || "{}");
+let hiddenDishes = JSON.parse(localStorage.getItem("mealHidden_v2") || "{}");
+let customDishes = JSON.parse(localStorage.getItem("mealCustom_v2") || "{}");
+let manageCat = null;
 let addFormTags = [];
 
-const TAG_MAP = {
-  protein:{label:"高蛋白",cls:"tag-protein"},veggie:{label:"蔬菜",cls:"tag-veggie"},
-  light:{label:"清淡",cls:"tag-light"},staple:{label:"主食",cls:"tag-staple"},
-  quick:{label:"快手",cls:"tag-quick"},iron:{label:"补铁",cls:"tag-iron"},
-  custom:{label:"自定义",cls:"tag-custom"}
-};
+function libKey(meal, cat) { return meal + "_" + cat; }
 
 // ========================================
-// GET ACTIVE DISHES (default - hidden + custom)
+// GET DISHES (active / all)
 // ========================================
-function getActiveDishes(cat) {
-  const defaults = {main:DEFAULT_MAINS,side:DEFAULT_SIDES,soup:DEFAULT_SOUPS,grain:DEFAULT_GRAINS};
-  const key = cat === "side" ? "sides" : cat === "soup" ? "soups" : cat === "grain" ? "grains" : "mains";
+function getActiveDishes(meal, cat) {
+  const key = libKey(meal, cat);
+  const defaults = LIB[key] || [];
   const hidden = hiddenDishes[key] || [];
   const customs = (customDishes[key] || []).map(d => ({...d, _custom:true}));
-  return [...defaults[cat].filter(d => !hidden.includes(d.name)), ...customs];
+  return [...defaults.filter(d => !hidden.includes(d.name)), ...customs];
 }
-
-function getAllDishes(cat) {
-  const defaults = {main:DEFAULT_MAINS,side:DEFAULT_SIDES,soup:DEFAULT_SOUPS,grain:DEFAULT_GRAINS};
-  const key = cat === "side" ? "sides" : cat === "soup" ? "soups" : cat === "grain" ? "grains" : "mains";
+function getAllDishes(meal, cat) {
+  const key = libKey(meal, cat);
+  const defaults = LIB[key] || [];
   const hidden = hiddenDishes[key] || [];
   const customs = (customDishes[key] || []).map(d => ({...d, _custom:true}));
-  return [...defaults[cat].map(d => ({...d, _hidden:hidden.includes(d.name)})), ...customs];
-}
-
-function isActive(cat, name) {
-  return getActiveDishes(cat).some(d => d.name === name);
+  return [...defaults.map(d => ({...d, _hidden:hidden.includes(d.name)})), ...customs];
 }
 
 // ========================================
@@ -452,32 +626,40 @@ function dateDisplay(d) {
 }
 
 // ========================================
-// MENU GENERATION ENGINE
+// RECENT HISTORY (for variety)
 // ========================================
-function getRecentDishes(days) {
-  const used = {main:[],side:[],soup:[],grain:[]};
+function getRecentNames(meal, days) {
+  const used = {};
+  const cfg = MEAL_CFG[meal];
+  cfg.cats.forEach(c => used[c.k] = []);
   for (let i = 1; i <= days; i++) {
     const d = new Date(currentDate); d.setDate(d.getDate() - i);
     const k = dateKey(d);
-    if (savedMenus[k]) {
-      const m = savedMenus[k];
-      m.mains.forEach(n => used.main.push(n));
-      m.sides.forEach(n => used.side.push(n));
-      used.soup.push(m.soup);
-      used.grain.push(m.grain);
+    const dayMenu = savedMenus[k];
+    if (dayMenu && dayMenu[meal]) {
+      cfg.cats.forEach(c => {
+        const val = dayMenu[meal][c.k];
+        if (!val) return;
+        if (Array.isArray(val)) val.forEach(n => used[c.k].push(n));
+        else used[c.k].push(val);
+      });
     }
   }
   return used;
 }
-
-function getRecentProteinSrc(days) {
+function getRecentProteinSrc(meal, days) {
   const srcs = [];
+  const mainCat = meal === "breakfast" ? "protein" : (meal === "lunch" ? "lmain" : "main");
   for (let i = 1; i <= days; i++) {
     const d = new Date(currentDate); d.setDate(d.getDate() - i);
     const k = dateKey(d);
-    if (savedMenus[k]) {
-      savedMenus[k].mains.forEach(name => {
-        const dish = DEFAULT_MAINS.find(m => m.name === name) || (customDishes.mains||[]).find(m=>m.name===name);
+    const dayMenu = savedMenus[k];
+    if (dayMenu && dayMenu[meal]) {
+      let names = dayMenu[meal][mainCat] || [];
+      if (!Array.isArray(names)) names = [names];
+      names.forEach(name => {
+        const dish = (LIB[libKey(meal, mainCat)] || []).find(m => m.name === name)
+          || (customDishes[libKey(meal, mainCat)] || []).find(m => m.name === name);
         if (dish && dish.proteinSrc) srcs.push(dish.proteinSrc);
       });
     }
@@ -485,100 +667,146 @@ function getRecentProteinSrc(days) {
   return srcs;
 }
 
-function pickFrom(arr, excludeNames, extraFilter) {
-  let c = arr.filter(i => !excludeNames.includes(i.name));
-  if (extraFilter) c = c.filter(extraFilter);
+// ========================================
+// MENU GENERATION
+// ========================================
+function pickOne(arr, exclude) {
+  let c = arr.filter(i => !exclude.includes(i.name));
   if (c.length === 0) c = arr;
   return c[Math.floor(Math.random() * c.length)];
 }
 
-function generateFullMenu(exclude) {
+function generateMeal(meal, exclude) {
   exclude = exclude || {};
-  const allMains = getActiveDishes("main");
-  const allSides = getActiveDishes("side");
-  const allSoups = getActiveDishes("soup");
-  const allGrains = getActiveDishes("grain");
-  const recent = getRecentDishes(5);
-  const recentProteinSrc = getRecentProteinSrc(3);
+  const cfg = MEAL_CFG[meal];
+  const recent = getRecentNames(meal, 5);
+  const menu = {};
 
-  // === MAIN DISH(ES) ===
-  let mains = [];
-  let mainCandidates = allMains.filter(m => !recent.main.includes(m.name));
-  if (exclude.mains) mainCandidates = mainCandidates.filter(m => !exclude.mains.includes(m.name));
-  let proteinFiltered = mainCandidates.filter(m => !recentProteinSrc.includes(m.proteinSrc));
-  const mainPool = proteinFiltered.length > 0 ? proteinFiltered : mainCandidates;
-
-  // For 1 person, prefer lighter mains
-  if (dinerCount === 1) {
-    let lightMains = mainPool.filter(m => !m.heavy);
-    if (lightMains.length > 0) mains.push(lightMains[Math.floor(Math.random()*lightMains.length)]);
-    else mains.push(mainPool[Math.floor(Math.random()*mainPool.length)]);
-  } else {
-    mains.push(mainPool[Math.floor(Math.random()*mainPool.length)]);
+  if (meal === "breakfast") {
+    // 早餐：每类1项，避开近5天重复
+    cfg.cats.forEach(c => {
+      const pool = getActiveDishes(meal, c.k);
+      const ex = [...(recent[c.k] || []).slice(0,3), ...(exclude[c.k] || [])];
+      menu[c.k] = pickOne(pool, ex);
+    });
+    return menu;
   }
 
-  // === SIDE DISH(ES) ===
+  // 午/晚餐
+  const mainCat = meal === "lunch" ? "lmain" : "main";
+  const sideCat = meal === "lunch" ? "lside" : "side";
+  const grainCat = meal === "lunch" ? "lgrain" : "grain";
+  const soupCat = meal === "lunch" ? "lsoup" : "soup";
+
+  const allMains = getActiveDishes(meal, mainCat);
+  const allSides = getActiveDishes(meal, sideCat);
+  const allGrains = getActiveDishes(meal, grainCat);
+  const allSoups = getActiveDishes(meal, soupCat);
+  const recentProteinSrc = getRecentProteinSrc(meal, 3);
+
+  // 主菜（1道）
+  let mains = [];
+  let mainCand = allMains.filter(m => !(recent[mainCat]||[]).includes(m.name));
+  if (exclude[mainCat]) mainCand = mainCand.filter(m => !exclude[mainCat].includes(m.name));
+  let proteinFiltered = mainCand.filter(m => !recentProteinSrc.includes(m.proteinSrc));
+  const mainPool = proteinFiltered.length > 0 ? proteinFiltered : mainCand;
+  const finalMainPool = mainPool.length > 0 ? mainPool : allMains;
+  if (dinerCount === 1) {
+    let lightMains = finalMainPool.filter(m => !m.heavy);
+    mains.push(lightMains.length > 0 ? lightMains[Math.floor(Math.random()*lightMains.length)] : finalMainPool[Math.floor(Math.random()*finalMainPool.length)]);
+  } else {
+    mains.push(finalMainPool[Math.floor(Math.random()*finalMainPool.length)]);
+  }
+  menu[mainCat] = mains;
+
+  // 配菜（1-2道，按人数）
   let sideCount = dinerCount <= 2 ? 1 : 2;
   let sides = [];
-  let sideRecent = recent.side.slice(0, 3);
-  let usedSideNames = [...exclude.sides || []];
-
+  let usedSideNames = [...(exclude[sideCat] || [])];
   for (let i = 0; i < sideCount; i++) {
-    let sideCandidates = allSides.filter(s => !sideRecent.includes(s.name) && !usedSideNames.includes(s.name));
-    const mainHasGreen = mains.some(m => m.tags.includes("veggie") && m.color === "green");
+    let sideCand = allSides.filter(s => !(recent[sideCat]||[]).slice(0,3).includes(s.name) && !usedSideNames.includes(s.name));
+    const mainHasGreen = mains.some(m => (m.tags||[]).includes("veggie") && m.color === "green");
     if (mainHasGreen && i === 0) {
-      let nonGreen = sideCandidates.filter(s => s.color !== "green");
-      if (nonGreen.length > 0) sideCandidates = nonGreen;
+      let nonGreen = sideCand.filter(s => s.color !== "green");
+      if (nonGreen.length > 0) sideCand = nonGreen;
     } else if (!mainHasGreen && i === 0) {
-      let greenOnes = sideCandidates.filter(s => s.color === "green");
-      if (greenOnes.length > 0 && Math.random() > 0.3) sideCandidates = greenOnes;
+      let greenOnes = sideCand.filter(s => s.color === "green");
+      if (greenOnes.length > 0 && Math.random() > 0.3) sideCand = greenOnes;
     }
     if (mains.some(m => m.heavy) && i === 0) {
-      let lightSides = sideCandidates.filter(s => s.tags.includes("quick"));
-      if (lightSides.length > 0) sideCandidates = lightSides;
+      let lightSides = sideCand.filter(s => (s.tags||[]).includes("quick"));
+      if (lightSides.length > 0) sideCand = lightSides;
     }
-    // For 2nd side, ensure color diversity
     if (i === 1 && sides.length > 0) {
-      let prevColor = sides[0].color;
-      let diffColor = sideCandidates.filter(s => s.color !== prevColor);
-      if (diffColor.length > 0) sideCandidates = diffColor;
+      let diffColor = sideCand.filter(s => s.color !== sides[0].color);
+      if (diffColor.length > 0) sideCand = diffColor;
     }
-    if (sideCandidates.length === 0) sideCandidates = allSides.filter(s => !usedSideNames.includes(s.name));
-    const picked = sideCandidates[Math.floor(Math.random()*sideCandidates.length)];
+    if (sideCand.length === 0) sideCand = allSides.filter(s => !usedSideNames.includes(s.name));
+    if (sideCand.length === 0) sideCand = allSides;
+    const picked = sideCand[Math.floor(Math.random()*sideCand.length)];
     if (picked) { sides.push(picked); usedSideNames.push(picked.name); }
   }
+  menu[sideCat] = sides;
 
-  // === SOUP ===
-  let soupCandidates = allSoups.filter(s => !recent.soup.slice(0,3).includes(s.name));
-  if (exclude.soup) soupCandidates = soupCandidates.filter(s => s.name !== exclude.soup);
+  // 汤
+  let soupCand = allSoups.filter(s => !(recent[soupCat]||[]).slice(0,3).includes(s.name));
+  if (exclude[soupCat]) soupCand = soupCand.filter(s => s.name !== exclude[soupCat]);
   if (mains.some(m => m.heavy)) {
-    let lightSoups = soupCandidates.filter(s => s.tags.includes("light"));
-    if (lightSoups.length > 0) soupCandidates = lightSoups;
+    let lightSoups = soupCand.filter(s => (s.tags||[]).includes("light"));
+    if (lightSoups.length > 0) soupCand = lightSoups;
   }
   if (mains.some(m => m.flavor==="辣"||m.flavor==="微辣")) {
-    let nonSpicy = soupCandidates.filter(s => s.flavor!=="辣" && s.flavor!=="微辣");
-    if (nonSpicy.length > 0) soupCandidates = nonSpicy;
+    let nonSpicy = soupCand.filter(s => s.flavor!=="辣" && s.flavor!=="微辣");
+    if (nonSpicy.length > 0) soupCand = nonSpicy;
   }
-  if (soupCandidates.length === 0) soupCandidates = allSoups;
-  const soup = soupCandidates[Math.floor(Math.random()*soupCandidates.length)];
+  if (soupCand.length === 0) soupCand = allSoups;
+  menu[soupCat] = soupCand[Math.floor(Math.random()*soupCand.length)];
 
-  // === GRAIN ===
-  let grainCandidates = allGrains.filter(g => !recent.grain.slice(0,3).includes(g.name));
-  if (exclude.grain) grainCandidates = grainCandidates.filter(g => g.name !== exclude.grain);
+  // 主食
+  let grainCand = allGrains.filter(g => !(recent[grainCat]||[]).slice(0,3).includes(g.name));
+  if (exclude[grainCat]) grainCand = grainCand.filter(g => g.name !== exclude[grainCat]);
   if (mains.some(m => m.flavor==="清淡") && Math.random()>0.5) {
-    let mixed = grainCandidates.filter(g => g.grain==="mixed");
-    if (mixed.length > 0) grainCandidates = mixed;
+    let mixed = grainCand.filter(g => g.grain==="mixed");
+    if (mixed.length > 0) grainCand = mixed;
   }
-  if (grainCandidates.length === 0) grainCandidates = allGrains;
-  const grain = grainCandidates[Math.floor(Math.random()*grainCandidates.length)];
+  if (grainCand.length === 0) grainCand = allGrains;
+  menu[grainCat] = grainCand[Math.floor(Math.random()*grainCand.length)];
 
-  return { mains, sides, soup, grain };
+  return menu;
 }
 
-function calcNutrition(menu) {
+// ========================================
+// NUTRITION
+// ========================================
+function calcBreakfastNutrition(menu) {
+  const cfg = MEAL_CFG.breakfast;
+  const res = {slowcarb:0, choline:0, omega3:0, antiox:0, protein:0};
+  cfg.cats.forEach(c => {
+    const dish = menu[c.k];
+    if (!dish) return;
+    (dish.nut || []).forEach(n => {
+      const pot = (dish.pot && dish.pot[n]) ? dish.pot[n] : 70;
+      if (res[n] !== undefined) res[n] = Math.max(res[n], pot);
+    });
+  });
+  Object.keys(res).forEach(k => res[k] = Math.min(100, Math.round(res[k])));
+  return res;
+}
+
+function calcMealNutrition(meal, menu) {
+  if (meal === "breakfast") return calcBreakfastNutrition(menu);
   let p = 0, v = 0, s = 0;
-  menu.mains.forEach(m => {
-    if (m.tags.includes("protein")) p += dinerCount <= 1 ? 40 : 45;
+  const mainCat = meal === "lunch" ? "lmain" : "main";
+  const sideCat = meal === "lunch" ? "lside" : "side";
+  const grainCat = meal === "lunch" ? "lgrain" : "grain";
+  const soupCat = meal === "lunch" ? "lsoup" : "soup";
+  const mains = menu[mainCat] || [];
+  const sides = menu[sideCat] || [];
+  const soup = menu[soupCat];
+  const grain = menu[grainCat];
+
+  mains.forEach(m => {
+    if ((m.tags||[]).includes("protein")) p += dinerCount <= 1 ? 40 : 45;
     if (m.proteinSrc && ["beef","pork","fish"].includes(m.proteinSrc)) p += 15;
     else if (m.proteinSrc==="chicken") p += 10;
     else if (m.proteinSrc==="seafood") p += 12;
@@ -586,229 +814,259 @@ function calcNutrition(menu) {
     else if (m.proteinSrc==="egg") p += 6;
     if (m.proteinSrc) p += 5;
   });
-  if (menu.soup.tags.includes("protein")) p += 8;
+  if (soup && (soup.tags||[]).includes("protein")) p += 8;
   p = Math.min(100, p);
 
-  menu.mains.forEach(m => { if (m.tags.includes("veggie")) v += 12; });
-  v += menu.sides.length * 25;
-  menu.sides.forEach(si => { if (si.tags.includes("quick")) v += 8; });
+  mains.forEach(m => { if ((m.tags||[]).includes("veggie")) v += 12; });
+  v += sides.length * 25;
+  sides.forEach(si => { if ((si.tags||[]).includes("quick")) v += 8; });
   v += 12;
-  if (menu.grain.tags.includes("veggie")) v += 8;
+  if (grain && (grain.tags||[]).includes("veggie")) v += 8;
   v = Math.min(100, v);
 
-  s = menu.grain.tags.includes("mixed")||menu.grain.grain==="mixed" ? 72 : 68;
-  if (menu.mains.some(m => m.tags.includes("staple"))) s += 8;
+  s = (grain && ((grain.tags||[]).includes("mixed") || grain.grain==="mixed")) ? 72 : 68;
+  if (mains.some(m => (m.tags||[]).includes("staple"))) s += 8;
   s = Math.min(100, s);
 
-  return { protein:Math.round(p), veggie:Math.round(v), staple:Math.round(s) };
+  return {protein:Math.round(p), veggie:Math.round(v), staple:Math.round(s)};
 }
 
-function totalCombos() {
-  const m = getActiveDishes("main").length;
-  const s = getActiveDishes("side").length;
-  const sp = getActiveDishes("soup").length;
-  const g = getActiveDishes("grain").length;
-  let sidesCount = dinerCount <= 2 ? s : s * Math.max(1, s-1);
-  return m * sidesCount * sp * g;
+function totalCombos(meal) {
+  const cfg = MEAL_CFG[meal];
+  let total = 1;
+  cfg.cats.forEach(c => {
+    const n = getActiveDishes(meal, c.k).length;
+    if (c.multi && (meal === "lunch" || meal === "dinner")) {
+      total *= (c.k.includes("side") ? (dinerCount <= 2 ? n : n * Math.max(1, n-1)) : n);
+    } else {
+      total *= n;
+    }
+  });
+  return total;
 }
 
 // ========================================
 // RENDER
 // ========================================
-function renderTags(tags) {
+function renderTags(dish) {
+  const tags = dish.nut || dish.tags || [];
   return tags.map(t => {
     const info = TAG_MAP[t]; if (!info) return '';
     return `<span class="tag ${info.cls}">${info.label}</span>`;
   }).join('');
 }
 
-function renderMenu(menu) {
+function renderMenuItem(cat, dish, idx, swapLabel) {
+  if (!dish) return '';
+  const badge = dish._custom ? '<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>' : '';
+  return `<div class="menu-item">
+    <div class="item-info">
+      <div class="item-name">${cat.icon} ${dish.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">${cat.n}</span>${badge}</div>
+      <div class="item-desc">${dish.desc}</div>
+      <div class="item-tags">${renderTags(dish)}</div>
+    </div>
+    <button class="item-swap-btn" onclick="swapOne('${cat.k}',${idx})">${swapLabel}</button>
+  </div>`;
+}
+
+function renderMenu(meal, menu) {
+  const cfg = MEAL_CFG[meal];
   let items = [];
-
-  menu.mains.forEach((dish, i) => {
-    const role = menu.mains.length > 1 ? (i===0?"主菜":"副菜") : "主菜";
-    const icon = i===0?"🍖":"🍗";
-    items.push(`<div class="menu-item">
-      <div class="item-info">
-        <div class="item-name">${icon} ${dish.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">${role}</span>${dish._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
-        <div class="item-desc">${dish.desc}</div>
-        <div class="item-tags">${renderTags(dish.tags)}</div>
-      </div>
-      <button class="item-swap-btn" onclick="swapOne('main',${i})">换主菜</button>
-    </div>`);
+  cfg.cats.forEach(c => {
+    const val = menu[c.k];
+    if (c.multi && Array.isArray(val)) {
+      val.forEach((dish, i) => {
+        const role = val.length > 1 ? (i===0?"主菜":"副菜") : c.n;
+        items.push(`<div class="menu-item">
+          <div class="item-info">
+            <div class="item-name">${c.icon} ${dish.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">${role}</span>${dish._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
+            <div class="item-desc">${dish.desc}</div>
+            <div class="item-tags">${renderTags(dish)}</div>
+          </div>
+          <button class="item-swap-btn" onclick="swapOne('${c.k}',${i})">换${c.n}</button>
+        </div>`);
+      });
+    } else if (val) {
+      items.push(renderMenuItem(c, val, 0, "换" + c.n));
+    }
   });
-
-  menu.sides.forEach((dish, i) => {
-    const role = menu.sides.length > 1 ? (i===0?"配菜一":"配菜二") : "配菜";
-    const icon = i===0?"🥬":"🥦";
-    items.push(`<div class="menu-item">
-      <div class="item-info">
-        <div class="item-name">${icon} ${dish.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">${role}</span>${dish._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
-        <div class="item-desc">${dish.desc}</div>
-        <div class="item-tags">${renderTags(dish.tags)}</div>
-      </div>
-      <button class="item-swap-btn" onclick="swapOne('side',${i})">换配菜</button>
-    </div>`);
-  });
-
-  items.push(`<div class="menu-item">
-    <div class="item-info">
-      <div class="item-name">🍲 ${menu.soup.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">汤</span>${menu.soup._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
-      <div class="item-desc">${menu.soup.desc}</div>
-      <div class="item-tags">${renderTags(menu.soup.tags)}</div>
-    </div>
-    <button class="item-swap-btn" onclick="swapOne('soup',0)">换汤</button>
-  </div>`);
-
-  items.push(`<div class="menu-item">
-    <div class="item-info">
-      <div class="item-name">🍚 ${menu.grain.name} <span style="font-size:12px;color:#b4b2a9;font-weight:400;">主食</span>${menu.grain._custom?'<span style="font-size:10px;color:#534AB7;border:1px solid #AFA9EC;background:#EEEDFE;padding:1px 5px;border-radius:10px;margin-left:6px;">自选</span>':''}</div>
-      <div class="item-desc">${menu.grain.desc}</div>
-      <div class="item-tags">${renderTags(menu.grain.tags)}</div>
-    </div>
-    <button class="item-swap-btn" onclick="swapOne('grain',0)">换主食</button>
-  </div>`);
-
   return items.join('');
 }
 
-function renderNutrition(nut) {
-  const bars = [
-    {label:"蛋白质",value:nut.protein,fill:"nut-fill-protein"},
-    {label:"蔬菜",value:nut.veggie,fill:"nut-fill-veggie"},
-    {label:"主食",value:nut.staple,fill:"nut-fill-staple"}
-  ];
-  const score = Math.round((nut.protein+nut.veggie+nut.staple)/3);
-  let scoreColor = score>=68?"#0F6E56":score>=55?"#BA7517":"#E24B4A";
-  let scoreText = score>=68?"营养均衡":score>=55?"基本达标":"建议加蔬菜";
+function renderNutrition(meal, nut) {
+  const cfg = MEAL_CFG[meal];
+  const bars = cfg.nut.map(k => ({
+    label: NUT_META[k].label, value: nut[k] || 0, fill: NUT_META[k].fill
+  }));
+  const avg = Math.round(bars.reduce((s,b)=>s+b.value,0) / bars.length);
+  let scoreColor = avg>=68?"#0F6E56":avg>=55?"#BA7517":"#E24B4A";
+  let scoreText = avg>=68?"营养均衡":avg>=55?"基本达标":"建议调整";
+
+  let hint = '';
+  if (meal === "breakfast") {
+    const missing = cfg.nut.filter(k => (nut[k]||0) < 55).map(k => NUT_META[k].label);
+    if (missing.length) hint = `💡 偏弱：${missing.join("、")}。可换一道对应的菜补上（如胆碱不足就选鸡蛋/蛋黄）。`;
+  }
+
   return `<div style="background:#fff;border-radius:16px;border:.5px solid rgba(0,0,0,.12);padding:16px 20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
       <span style="font-size:13px;color:#888780;">营养评估</span>
       <span style="font-size:13px;font-weight:500;color:${scoreColor};">${scoreText}</span>
     </div>
     ${bars.map(b=>`<div class="nut-row"><span class="nut-label">${b.label}</span><div class="nut-track"><div class="nut-fill ${b.fill}" style="width:${b.value}%"></div></div><span class="nut-value">${b.value}%</span></div>`).join('')}
+    ${hint?`<div class="nut-hint">${hint}</div>`:''}
   </div>`;
 }
 
 function updateUI() {
+  const meal = currentMeal;
+  const cfg = MEAL_CFG[meal];
+
+  // meal tabs
+  document.querySelectorAll(".meal-tab").forEach(b => {
+    b.classList.toggle("active", b.dataset.meal === meal);
+  });
+
+  // brain tip
+  const tipEl = document.getElementById("brainTip");
+  tipEl.style.display = "block";
+  document.getElementById("brainTipText").textContent = cfg.tip;
+  document.querySelector(".brain-tip-title").textContent = `${cfg.icon} ${meal==="breakfast"?"黄翔博士 · 早餐「五大金刚」":(meal==="lunch"?"午餐 · 承上启下":"黄翔博士 · 晚餐补蛋白")}`;
+
   document.getElementById("dateLabel").textContent = dateDisplay(currentDate);
-  const key = dateKey(currentDate);
+  document.getElementById("menuSectionLabel").textContent = `今日${cfg.name}菜单`;
 
   // diner buttons
   document.querySelectorAll(".diner-btn").forEach(b => {
     b.classList.toggle("active", parseInt(b.dataset.n) === dinerCount);
   });
 
-  if (savedMenus[key]) {
-    const s = savedMenus[key];
-    currentMenu.mains = s.mains.map(n => [...DEFAULT_MAINS,...(customDishes.mains||[])].find(d=>d.name===n)).filter(Boolean);
-    currentMenu.sides = s.sides.map(n => [...DEFAULT_SIDES,...(customDishes.sides||[])].find(d=>d.name===n)).filter(Boolean);
-    currentMenu.soup = [...DEFAULT_SOUPS,...(customDishes.soups||[])].find(d=>d.name===s.soup) || DEFAULT_SOUPS[0];
-    currentMenu.grain = [...DEFAULT_GRAINS,...(customDishes.grains||[])].find(d=>d.name===s.grain) || DEFAULT_GRAINS[0];
-    if (s.diners) dinerCount = s.diners;
-  } else if (!currentMenu.mains.length) {
-    currentMenu = generateFullMenu();
+  const key = dateKey(currentDate);
+  const dayMenu = savedMenus[key];
+  if (dayMenu && dayMenu[meal]) {
+    // 已从历史恢复
+    currentMenu = {};
+    cfg.cats.forEach(c => {
+      const val = dayMenu[meal][c.k];
+      if (val == null) return;
+      const pool = [...(LIB[libKey(meal,c.k)]||[]), ...(customDishes[libKey(meal,c.k)]||[])];
+      if (Array.isArray(val)) {
+        currentMenu[c.k] = val.map(n => pool.find(d=>d.name===n)).filter(Boolean);
+      } else {
+        currentMenu[c.k] = pool.find(d=>d.name===val) || null;
+      }
+    });
+    if (dayMenu[meal].diners) dinerCount = dayMenu[meal].diners;
+  } else if (!currentMenu || Object.keys(currentMenu).length === 0) {
+    currentMenu = generateMeal(meal);
   }
 
   const mc = document.getElementById("menuContent");
-  mc.innerHTML = renderMenu(currentMenu);
+  mc.innerHTML = renderMenu(meal, currentMenu);
   mc.classList.remove("fade-in"); void mc.offsetWidth; mc.classList.add("fade-in");
 
-  document.getElementById("nutritionBar").innerHTML = renderNutrition(calcNutrition(currentMenu));
-  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+  document.getElementById("nutritionBar").innerHTML = renderNutrition(meal, calcMealNutrition(meal, currentMenu));
+
+  const counts = cfg.cats.map(c => `${getActiveDishes(meal,c.k).length}道${c.n}`).join(" / ");
+  document.getElementById("comboCount").textContent = `${totalCombos(meal).toLocaleString()} 种搭配 · ${counts}`;
 
   const badge = document.getElementById("savedBadge");
-  if (savedMenus[key]) { badge.textContent="已保存这一天的菜单"; badge.style.display="block"; }
+  if (dayMenu && dayMenu[meal]) { badge.textContent=`已保存这天的${cfg.name}`; badge.style.display="block"; }
   else { badge.style.display="none"; }
+
+  if (document.getElementById("managePanel").classList.contains("open")) renderManageList();
 }
 
 // ========================================
 // INTERACTIONS
 // ========================================
+function setMeal(m) {
+  if (currentMeal === m) return;
+  currentMeal = m;
+  localStorage.setItem("mealCurrent", m);
+  currentMenu = {};
+  manageCat = null;
+  updateUI();
+}
+
 function setDiners(n) {
   dinerCount = n;
-  localStorage.setItem("dinnerDiners", String(n));
+  localStorage.setItem("mealDiners", String(n));
   const key = dateKey(currentDate);
-  if (!savedMenus[key]) {
-    currentMenu = generateFullMenu();
+  const dayMenu = savedMenus[key];
+  if (!dayMenu || !dayMenu[currentMeal]) {
+    currentMenu = generateMeal(currentMeal);
   }
   updateUI();
 }
 
-function swapOne(cat, idx) {
+function currentExclude() {
+  const cfg = MEAL_CFG[currentMeal];
+  const ex = {};
+  cfg.cats.forEach(c => {
+    const val = currentMenu[c.k];
+    if (Array.isArray(val)) ex[c.k] = val.map(d=>d.name);
+    else if (val) ex[c.k] = val.name;
+  });
+  return ex;
+}
+
+function swapOne(catK, idx) {
   const dKey = dateKey(currentDate);
-  if (savedMenus[dKey]) { alert("这天已确认菜单，不能更换。"); return; }
-
-  const exclude = {
-    mains: currentMenu.mains.map(d=>d.name),
-    sides: currentMenu.sides.map(d=>d.name),
-    soup: currentMenu.soup.name,
-    grain: currentMenu.grain.name
-  };
-
-  const newMenu = generateFullMenu(exclude);
-
-  if (cat === "main") {
-    currentMenu.mains[idx] = newMenu.mains[0];
-  } else if (cat === "side") {
-    let newSide = newMenu.sides.find(s => !currentMenu.sides.some(cs => cs.name === s.name));
-    if (!newSide) newSide = newMenu.sides[0];
-    currentMenu.sides[idx] = newSide;
-  } else if (cat === "soup") {
-    currentMenu.soup = newMenu.soup;
-  } else if (cat === "grain") {
-    currentMenu.grain = newMenu.grain;
+  if (savedMenus[dKey] && savedMenus[dKey][currentMeal]) { alert("这天已确认菜单，不能更换。"); return; }
+  const newMenu = generateMeal(currentMeal, currentExclude());
+  const val = currentMenu[catK];
+  if (Array.isArray(val)) {
+    let nd = newMenu[catK][0];
+    if (newMenu[catK] && newMenu[catK].some(d=>!val.some(v=>v.name===d.name))) {
+      nd = newMenu[catK].find(d=>!val.some(v=>v.name===d.name));
+    }
+    currentMenu[catK][idx] = nd;
+  } else {
+    currentMenu[catK] = newMenu[catK];
   }
-
-  const mc = document.getElementById("menuContent");
-  mc.classList.add("shake");
-  setTimeout(()=>mc.classList.remove("shake"),400);
-  setTimeout(()=>{
-    mc.innerHTML = renderMenu(currentMenu);
-    mc.classList.remove("fade-in"); void mc.offsetWidth; mc.classList.add("fade-in");
-    document.getElementById("nutritionBar").innerHTML = renderNutrition(calcNutrition(currentMenu));
-  },200);
+  refreshMenuView();
 }
 
 function rerollAll() {
   const dKey = dateKey(currentDate);
-  if (savedMenus[dKey]) { alert("这天已确认菜单，不能更换。"); return; }
-  currentMenu = generateFullMenu({
-    mains: currentMenu.mains.map(d=>d.name),
-    sides: currentMenu.sides.map(d=>d.name),
-    soup: currentMenu.soup.name,
-    grain: currentMenu.grain.name
-  });
+  if (savedMenus[dKey] && savedMenus[dKey][currentMeal]) { alert("这天已确认菜单，不能更换。"); return; }
+  currentMenu = generateMeal(currentMeal, currentExclude());
+  refreshMenuView();
+}
+
+function refreshMenuView() {
   const mc = document.getElementById("menuContent");
   mc.classList.add("shake");
   setTimeout(()=>mc.classList.remove("shake"),400);
   setTimeout(()=>{
-    mc.innerHTML = renderMenu(currentMenu);
+    mc.innerHTML = renderMenu(currentMeal, currentMenu);
     mc.classList.remove("fade-in"); void mc.offsetWidth; mc.classList.add("fade-in");
-    document.getElementById("nutritionBar").innerHTML = renderNutrition(calcNutrition(currentMenu));
+    document.getElementById("nutritionBar").innerHTML = renderNutrition(currentMeal, calcMealNutrition(currentMeal, currentMenu));
   },200);
 }
 
 function changeDate(delta) {
   const d = new Date(currentDate); d.setDate(d.getDate()+delta);
   currentDate = d;
-  currentMenu = { mains:[], sides:[], soup:null, grain:null };
+  currentMenu = {};
   updateUI();
 }
 
 function saveMenu() {
   const key = dateKey(currentDate);
-  savedMenus[key] = {
-    mains: currentMenu.mains.map(d=>d.name),
-    sides: currentMenu.sides.map(d=>d.name),
-    soup: currentMenu.soup.name,
-    grain: currentMenu.grain.name,
-    diners: dinerCount
-  };
-  localStorage.setItem("dinnerHistory_v2", JSON.stringify(savedMenus));
+  if (!savedMenus[key]) savedMenus[key] = {};
+  const cfg = MEAL_CFG[currentMeal];
+  const rec = {diners: dinerCount};
+  cfg.cats.forEach(c => {
+    const val = currentMenu[c.k];
+    if (Array.isArray(val)) rec[c.k] = val.map(d=>d.name);
+    else if (val) rec[c.k] = val.name;
+  });
+  savedMenus[key][currentMeal] = rec;
+  localStorage.setItem("mealHistory_v3", JSON.stringify(savedMenus));
   const badge = document.getElementById("savedBadge");
-  badge.textContent = "已保存！这天就吃这个了";
-
+  badge.textContent = `已保存！这天的${cfg.name}就吃这个了`;
   badge.style.display = "block";
 }
 
@@ -822,10 +1080,20 @@ function renderHistory() {
   const list = document.getElementById("historyList");
   const entries = Object.entries(savedMenus).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
   if (!entries.length) { list.innerHTML='<li style="color:#b4b2a9;justify-content:center;">暂无记录</li>'; return; }
-  list.innerHTML = entries.map(([date,info]) => {
-    const parts = info.mains.join("+") + " / " + info.sides.join("+") + " / " + info.soup;
-    const diners = info.diners ? `<span class="h-diners">${info.diners}人</span>` : '';
-    return `<li><span class="h-date">${date}${diners}</span><span class="h-menu">${parts}</span></li>`;
+  list.innerHTML = entries.map(([date, dayMenu]) => {
+    const rows = Object.keys(dayMenu).filter(m => MEAL_CFG[m]).map(m => {
+      const cfg = MEAL_CFG[m];
+      const rec = dayMenu[m];
+      const parts = [];
+      cfg.cats.forEach(c => {
+        const val = rec[c.k];
+        if (val == null) return;
+        if (Array.isArray(val)) parts.push(val.join("+"));
+        else parts.push(val);
+      });
+      return `<div class="h-meal-row"><span class="h-meal-tag">${cfg.icon}</span><span class="h-menu">${parts.join(" / ")}</span></div>`;
+    }).join('');
+    return `<li><span class="h-date">${date}</span><span class="h-meals">${rows}</span></li>`;
   }).join('');
 }
 
@@ -833,24 +1101,37 @@ function renderHistory() {
 // MANAGE PANEL
 // ========================================
 function toggleManage() {
-  document.getElementById("managePanel").classList.toggle("open");
-  if (document.getElementById("managePanel").classList.contains("open")) {
+  const panel = document.getElementById("managePanel");
+  panel.classList.toggle("open");
+  if (panel.classList.contains("open")) {
+    const cfg = MEAL_CFG[currentMeal];
+    if (!manageCat || !cfg.cats.some(c=>c.k===manageCat)) manageCat = cfg.cats[0].k;
+    renderManageTabs();
     renderManageList();
+    renderAddForm();
   }
 }
 
-function switchTab(cat) {
-  manageTab = cat;
+function renderManageTabs() {
+  const cfg = MEAL_CFG[currentMeal];
+  document.getElementById("mpTitle").textContent = `${cfg.icon} ${cfg.name}菜品库`;
+  document.getElementById("mpTabs").innerHTML = cfg.cats.map(c =>
+    `<div class="mp-tab ${c.k===manageCat?'active':''}" data-cat="${c.k}" onclick="switchManageCat('${c.k}')">${c.n}</div>`
+  ).join('');
+}
+
+function switchManageCat(k) {
+  manageCat = k;
   addFormTags = [];
-  document.querySelectorAll(".mp-tab").forEach(t => t.classList.toggle("active", t.dataset.cat===cat));
+  renderManageTabs();
   renderManageList();
   renderAddForm();
 }
 
 function renderManageList() {
-  const cat = manageTab;
-  const dishes = getAllDishes(cat);
-  const key = cat==="side"?"sides":cat==="soup"?"soups":cat==="grain"?"grains":"mains";
+  if (!manageCat) return;
+  const dishes = getAllDishes(currentMeal, manageCat);
+  const key = libKey(currentMeal, manageCat);
   const list = document.getElementById("mpDishList");
   list.innerHTML = dishes.map((d,i) => {
     const isOn = !d._hidden;
@@ -866,85 +1147,49 @@ function renderManageList() {
 }
 
 function toggleDish(key, name, btn) {
+  if (!hiddenDishes[key]) hiddenDishes[key] = [];
   const hidden = hiddenDishes[key];
   const idx = hidden.indexOf(name);
   if (idx >= 0) hidden.splice(idx, 1);
   else hidden.push(name);
-  localStorage.setItem("dinnerHidden", JSON.stringify(hiddenDishes));
+  localStorage.setItem("mealHidden_v2", JSON.stringify(hiddenDishes));
   btn.classList.toggle("on", idx < 0);
   btn.classList.toggle("off", idx >= 0);
   const nameEl = btn.closest(".mp-dish").querySelector(".mp-dish-name");
   nameEl.classList.toggle("hidden-dish", idx < 0);
-  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+  updateComboCount();
 }
 
 function deleteCustom(key, idx) {
   if (!confirm("确定删除这个自定义菜品？")) return;
   customDishes[key].splice(idx, 1);
-  localStorage.setItem("dinnerCustom", JSON.stringify(customDishes));
+  localStorage.setItem("mealCustom_v2", JSON.stringify(customDishes));
   renderManageList();
-  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+  updateComboCount();
+}
+
+function updateComboCount() {
+  const cfg = MEAL_CFG[currentMeal];
+  const counts = cfg.cats.map(c => `${getActiveDishes(currentMeal,c.k).length}道${c.n}`).join(" / ");
+  document.getElementById("comboCount").textContent = `${totalCombos(currentMeal).toLocaleString()} 种搭配 · ${counts}`;
 }
 
 function renderAddForm() {
-  const cat = manageTab;
-  const extra = document.getElementById("addExtraFields");
-
-  if (cat === "main") {
-    extra.innerHTML = `
-      <div style="display:flex;gap:10px;">
-        <div class="mp-field" style="flex:1"><label>蛋白质来源</label>
-          <select id="addProteinSrc">
-            <option value="chicken">鸡肉</option><option value="pork">猪肉</option>
-            <option value="beef">牛肉</option><option value="fish">鱼</option>
-            <option value="seafood">海鲜/虾</option><option value="tofu">豆腐</option>
-            <option value="egg">鸡蛋</option>
-          </select>
-        </div>
-        <div class="mp-field" style="flex:1"><label>口味</label>
-          <select id="addFlavor">
-            <option value="咸鲜">咸鲜</option><option value="酸甜">酸甜</option>
-            <option value="甜">甜</option><option value="辣">辣</option>
-            <option value="微辣">微辣</option><option value="清淡">清淡</option>
-            <option value="浓郁">浓郁</option><option value="蒜香">蒜香</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <div class="mp-field" style="flex:1"><label>颜色特征</label>
-          <select id="addColor">
-            <option value="brown">棕/深色</option><option value="red">红色</option>
-            <option value="green">绿色</option><option value="yellow">黄色</option>
-            <option value="white">白色</option><option value="orange">橙色</option>
-          </select>
-        </div>
-        <div class="mp-field" style="flex:1"><label>是否重口</label>
-          <select id="addHeavy">
-            <option value="false">清淡</option><option value="true">重口</option>
-          </select>
-        </div>
-      </div>`;
-  } else if (cat === "side") {
-    extra.innerHTML = `
-      <div style="display:flex;gap:10px;">
-        <div class="mp-field" style="flex:1"><label>颜色特征</label>
-          <select id="addColor">
-            <option value="green">绿色</option><option value="white">白色</option>
-            <option value="yellow">黄色</option><option value="orange">橙色</option>
-            <option value="black">黑色</option><option value="purple">紫色</option>
-            <option value="mixed">混合</option>
-          </select>
-        </div>
-      </div>`;
+  if (!manageCat) return;
+  const cat = MEAL_CFG[currentMeal].cats.find(c=>c.k===manageCat);
+  // 可用标签：该餐相关的营养/特点标签
+  let tagOpts;
+  if (currentMeal === "breakfast") {
+    tagOpts = ["slowcarb","choline","omega3","antiox","protein","staple"];
+  } else if (manageCat === cat.k && (cat.k.includes("main"))) {
+    tagOpts = ["protein","veggie","staple","iron"];
+  } else if (cat.k.includes("side")) {
+    tagOpts = ["veggie","protein","quick","staple","iron"];
+  } else if (cat.k.includes("soup")) {
+    tagOpts = ["light","protein","staple"];
   } else {
-    extra.innerHTML = '';
+    tagOpts = ["staple","veggie","light"];
   }
-
-  // Tags
-  const tagOpts = cat==="main"?["protein","veggie"]:
-                  cat==="side"?["veggie","protein","quick","staple"]:
-                  cat==="soup"?["light","protein","staple"]:
-                  ["staple","veggie","light"];
   document.getElementById("addTags").innerHTML = tagOpts.map(t =>
     `<button class="mp-tag-opt" data-tag="${t}" onclick="toggleAddTag(this,'${t}')">${TAG_MAP[t]?TAG_MAP[t].label:t}</button>`
   ).join('');
@@ -961,36 +1206,17 @@ function addCustomDish() {
   const desc = document.getElementById("addDesc").value.trim();
   if (!name) { alert("请输入菜品名称"); return; }
   if (!desc) { alert("请输入菜品简介"); return; }
-
-  const cat = manageTab;
-  const key = cat==="side"?"sides":cat==="soup"?"soups":cat==="grain"?"grains":"mains";
+  const key = libKey(currentMeal, manageCat);
   if (!customDishes[key]) customDishes[key] = [];
-
-  let dish = { name, desc, tags:[...addFormTags,"custom"] };
-
-  if (cat === "main") {
-    dish.proteinSrc = document.getElementById("addProteinSrc")?.value || "tofu";
-    dish.flavor = document.getElementById("addFlavor")?.value || "咸鲜";
-    dish.color = document.getElementById("addColor")?.value || "brown";
-    dish.heavy = document.getElementById("addHeavy")?.value === "true";
-  } else if (cat === "side") {
-    dish.vegType = "custom";
-    dish.color = document.getElementById("addColor")?.value || "green";
-  } else if (cat === "grain") {
-    dish.grain = "custom";
-  }
-
+  const dish = {name, desc, tags:[...addFormTags], nut:[...addFormTags]};
   customDishes[key].push(dish);
-  localStorage.setItem("dinnerCustom", JSON.stringify(customDishes));
-
-  // Reset form
+  localStorage.setItem("mealCustom_v2", JSON.stringify(customDishes));
   document.getElementById("addName").value = "";
   document.getElementById("addDesc").value = "";
   addFormTags = [];
   document.querySelectorAll(".mp-tag-opt").forEach(b => b.classList.remove("sel"));
-
   renderManageList();
-  document.getElementById("comboCount").textContent = `${totalCombos().toLocaleString()} 种搭配 · ${getActiveDishes("main").length}道主菜 / ${getActiveDishes("side").length}道配菜 / ${getActiveDishes("soup").length}道汤 / ${getActiveDishes("grain").length}种主食`;
+  updateComboCount();
 }
 
 // ========================================
