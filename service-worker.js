@@ -1,8 +1,9 @@
 // Service Worker for 三餐帮手 PWA
-const CACHE_NAME = 'meal-planner-v4';
+const CACHE_NAME = 'meal-planner-v5';
 const urlsToCache = [
   './dinner-planner.html',
-  './manifest.json'
+  './manifest.json',
+  './qrcode.png'
 ];
 
 // Install event - cache resources
