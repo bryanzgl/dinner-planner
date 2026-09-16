@@ -185,6 +185,23 @@
   .install-prompt p{font-size:13px;color:#2c2c2a;flex:1}
   .install-btn{background:#534AB7;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
   .install-dismiss{background:transparent;color:#888780;border:none;font-size:18px;cursor:pointer;padding:4px}
+  /* 内置浏览器提示 / 邀请好友安装 */
+  .inapp-tip{display:none;background:#FFF8E6;border-bottom:1px solid rgba(0,0,0,.08);padding:11px 16px}
+  .inapp-tip.show{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .inapp-tip p{font-size:12.5px;color:#7a5c14;flex:1;line-height:1.55}
+  .inapp-x{background:transparent;color:#b4b2a9;border:none;font-size:16px;cursor:pointer;padding:2px 4px;flex:0 0 auto}
+  .tool-btn{white-space:nowrap}
+  .qr-box{text-align:center;padding:2px 0 0}
+  .qr-img{width:186px;height:186px;border-radius:12px;background:#fff;display:block;margin:0 auto;border:.5px solid rgba(0,0,0,.12)}
+  .qr-cap{font-size:12px;color:#5f5e5a;margin-top:9px;line-height:1.55}
+  .invite-div{height:1px;background:rgba(0,0,0,.07);margin:15px 0}
+  .invite-hd{font-size:12.5px;font-weight:500;color:#2c2c2a;margin-bottom:9px}
+  .guide-tabs{display:flex;gap:6px;margin:2px 0 12px}
+  .guide-tab{flex:1;border:.5px solid rgba(0,0,0,.12);background:transparent;border-radius:9px;padding:7px 0;font-size:12px;color:#5f5e5a;cursor:pointer;white-space:nowrap}
+  .guide-tab.active{background:#EEEDFE;border-color:#534AB7;color:#534AB7;font-weight:500}
+  .guide-step{display:flex;gap:9px;align-items:flex-start;margin-bottom:9px}
+  .guide-num{flex:0 0 18px;height:18px;border-radius:50%;background:#534AB7;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .guide-tx{font-size:12.5px;color:#444441;line-height:1.6}
 </style>
 </head>
 <body>
@@ -194,6 +211,10 @@
   <p>📱 安装到桌面，像APP一样使用</p>
   <button class="install-btn" id="installBtn">安装</button>
   <button class="install-dismiss" id="dismissBtn">✕</button>
+</div>
+<div class="inapp-tip" id="inappTip">
+  <p>你在微信里打开了这个工具。微信不支持装到桌面，请点右上角「···」→ 选「在浏览器中打开」，就能添加到桌面当 APP 用。</p>
+  <button class="inapp-x" onclick="closeInappTip()">✕</button>
 </div>
 
 <div class="app-header">
@@ -244,12 +265,14 @@
   <div id="menuContent"></div>
   <div class="tool-row">
     <button class="tool-btn" onclick="toggleShopList()">买菜清单</button>
-    <button class="tool-btn" onclick="toggleShareCard()">生成分享卡片</button>
+    <button class="tool-btn" onclick="toggleShareCard()">菜单卡片</button>
+    <button class="tool-btn" onclick="toggleInvite()">邀请好友</button>
   </div>
   <button class="refresh-btn" onclick="rerollAll()">全部换一套</button>
 </div>
 <div class="side-panel" id="shopPanel"></div>
 <div class="side-panel" id="sharePanel"></div>
+<div class="side-panel" id="invitePanel"></div>
 
 <p class="section-label">营养评估</p>
 <div class="nutrition-bar" id="nutritionBar"></div>
@@ -1523,6 +1546,148 @@ function buildShareCard() {
   return cv.toDataURL('image/png');
 }
 
+// ========================================
+// 邀请好友 · 添加到桌面引导
+// ========================================
+const APP_URL = 'https://bryanzgl.github.io/dinner-planner/dinner-planner.html';
+const APP_UA = navigator.userAgent || '';
+const INAPP_BROWSER = /MicroMessenger/i.test(APP_UA) || (/MQQBrowser/i.test(APP_UA)) || /Weibo/i.test(APP_UA) || /DingTalk/i.test(APP_UA);
+const IOS_DEVICE = /iPad|iPhone|iPod/.test(APP_UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const INVITE_GUIDE = {
+  android: [
+    '用手机浏览器打开好友发来的链接（微信里打不开哦）',
+    '点浏览器右上角「⋮」菜单',
+    '选「添加到主屏幕」或「安装应用」',
+    '桌面出现「三餐帮手」图标，点开就是全屏 APP'
+  ],
+  ios: [
+    '用 iPhone 自带的 Safari 打开链接（必须是 Safari）',
+    '点屏幕底部的「分享」按钮（方框带向上箭头）',
+    '下滑找到「添加到主屏幕」，点进去',
+    '右上角点「添加」，桌面就出现图标了'
+  ],
+  pc: [
+    '用 Chrome 或 Edge 浏览器打开链接',
+    '看地址栏最右边，有个「安装」图标（显示器带↓）',
+    '点它，再确认安装',
+    '桌面上就有「三餐帮手」，双击打开像软件一样'
+  ]
+};
+let inviteTab = 'android';
+let inviteCardURL = '';
+function closeInappTip() {
+  const el = document.getElementById('inappTip');
+  if (el) el.classList.remove('show');
+  localStorage.setItem('inappTipDismissed', 'true');
+}
+(function initInappTip() {
+  const el = document.getElementById('inappTip');
+  if (el && INAPP_BROWSER && localStorage.getItem('inappTipDismissed') !== 'true') el.classList.add('show');
+})();
+function renderInvite() {
+  const steps = INVITE_GUIDE[inviteTab] || INVITE_GUIDE.android;
+  const tabs = [['android', '安卓手机'], ['ios', 'iPhone'], ['pc', '电脑']];
+  let h = '<div class="panel-head"><b>分享给好友</b><span class="panel-close" onclick="closeSidePanel(\'invitePanel\')">关闭</span></div>';
+  h += '<div class="qr-box"><img class="qr-img" src="qrcode.png" alt="三餐帮手二维码">' +
+    '<p class="qr-cap">把这个码发给好友，扫码就能打开<br>好友用浏览器打开后，可添加到桌面当 APP 用</p></div>';
+  h += '<div class="sl-actions"><button onclick="copyInviteText()">复制邀请语</button>' +
+    '<button class="primary" onclick="buildInviteCard()">生成邀请卡片</button></div>';
+  h += '<div class="invite-div"></div><div class="invite-hd">好友怎么装到桌面</div><div class="guide-tabs">';
+  tabs.forEach(function (t) {
+    h += '<div class="guide-tab' + (t[0] === inviteTab ? ' active' : '') + '" onclick="switchGuide(\'' + t[0] + '\')">' + t[1] + '</div>';
+  });
+  h += '</div>';
+  steps.forEach(function (s, i) {
+    h += '<div class="guide-step"><span class="guide-num">' + (i + 1) + '</span><span class="guide-tx">' + s + '</span></div>';
+  });
+  h += '<p class="panel-tip">iPhone 一定要用 Safari；安卓建议 Chrome / Edge / 夸克。装好后支持离线使用。</p>';
+  document.getElementById('invitePanel').innerHTML = h;
+}
+function switchGuide(k) { inviteTab = k; renderInvite(); }
+function toggleInvite() {
+  const p = document.getElementById('invitePanel');
+  if (!p) return;
+  if (p.classList.contains('open')) { p.classList.remove('open'); return; }
+  inviteTab = IOS_DEVICE ? 'ios' : 'android';
+  ['shopPanel', 'sharePanel'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  });
+  renderInvite();
+  p.classList.add('open');
+  p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function copyInviteText() {
+  const text = '推荐一个我自己在用的工具「三餐帮手」\n' +
+    '每天自动帮你决定早中晚吃什么，智能搭配不重样，还能一键生成买菜清单。\n' +
+    '复制链接用浏览器打开就能用，还能添加到手机桌面当 APP：\n\n' + APP_URL +
+    '\n\n（iPhone 请用 Safari 打开）';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { alert('已复制邀请语，发给好友即可'); })
+      .catch(function () { prompt('复制这段发给好友：', text); });
+  } else {
+    prompt('复制这段发给好友：', text);
+  }
+}
+function buildInviteCard() {
+  const img = new Image();
+  img.onload = function () {
+    const W = 600, HEAD = 200, CARD_Y = 230, CARD_H = 330, QR = 210, H = 700, dpr = 2;
+    const cv = document.createElement('canvas');
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
+    const gd = ctx.createLinearGradient(0, 0, W, HEAD);
+    gd.addColorStop(0, '#534AB7'); gd.addColorStop(1, '#7B6FE8');
+    ctx.fillStyle = gd; ctx.fillRect(0, 0, W, HEAD);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFFFFF'; ctx.font = '500 38px ' + CARD_FONT;
+    ctx.fillText('三餐帮手', W / 2, 92);
+    ctx.fillStyle = 'rgba(255,255,255,.82)'; ctx.font = '400 20px ' + CARD_FONT;
+    ctx.fillText('今天吃什么，不用再纠结', W / 2, 130);
+    ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = '400 16px ' + CARD_FONT;
+    ctx.fillText('早餐讲脑科学 · 午晚餐智能搭配 · 一键买菜清单', W / 2, 164);
+    ctx.shadowColor = 'rgba(0,0,0,.08)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
+    ctx.fillStyle = '#FFFFFF'; rrect(ctx, 50, CARD_Y, 500, CARD_H, 20); ctx.fill();
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = 'rgba(0,0,0,.07)'; ctx.lineWidth = 1;
+    rrect(ctx, 50, CARD_Y, 500, CARD_H, 20); ctx.stroke();
+    const qx = (W - QR) / 2, qy = CARD_Y + 28;
+    ctx.drawImage(img, qx, qy, QR, QR);
+    ctx.fillStyle = '#2C2C2A'; ctx.font = '500 19px ' + CARD_FONT;
+    ctx.fillText('扫一扫，加到手机桌面', W / 2, qy + QR + 36);
+    ctx.fillStyle = '#888780'; ctx.font = '400 15px ' + CARD_FONT;
+    ctx.fillText('像 APP 一样，点开就能用', W / 2, qy + QR + 62);
+    ['智能搭配', '营养均衡', '常换常新'].forEach(function (t, i) {
+      const bx = 100 + i * 140, by = 588, bw = 120, bh = 36;
+      ctx.fillStyle = '#EEEDFE'; rrect(ctx, bx, by, bw, bh, 18); ctx.fill();
+      ctx.fillStyle = '#534AB7'; ctx.font = '400 16px ' + CARD_FONT;
+      ctx.fillText(t, bx + bw / 2, by + 24);
+    });
+    ctx.fillStyle = '#B4B2A9'; ctx.font = '400 14px ' + CARD_FONT;
+    ctx.fillText('每天不用愁吃什么 · 推荐给同样发愁的家长', W / 2, 668);
+    inviteCardURL = cv.toDataURL('image/png');
+    const p = document.getElementById('invitePanel');
+    if (!p) return;
+    const old = document.getElementById('inviteCardBox');
+    if (old) old.remove();
+    p.insertAdjacentHTML('beforeend',
+      '<div id="inviteCardBox" style="margin-top:14px"><img class="share-img" src="' + inviteCardURL + '" alt="邀请卡片">' +
+      '<div class="sl-actions"><button class="primary" onclick="downloadInvite()">保存卡片到相册</button></div>' +
+      '<p class="panel-tip">手机上长按图片可保存到相册，发朋友圈或家长群最好用。</p></div>');
+    const box = document.getElementById('inviteCardBox');
+    if (box) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+  img.onerror = function () { alert('二维码还没加载出来，请联网后重试'); };
+  img.src = 'qrcode.png';
+}
+function downloadInvite() {
+  if (!inviteCardURL) return;
+  const a = document.createElement('a');
+  a.href = inviteCardURL; a.download = '三餐帮手-邀请卡.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
 function toggleShareCard() {
   const p = document.getElementById('sharePanel');
   if (p.classList.contains('open')) { p.classList.remove('open'); return; }
